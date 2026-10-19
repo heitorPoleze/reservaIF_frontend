@@ -1,5 +1,5 @@
 name: reserva_if
-description: "A new Flutter project."
+description: "reservaIF - agendamento de salas do IFES."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -9,6 +9,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  provider: ^6.1.5
+  http: ^1.6.0
+  intl: ^0.20.2
+  shared_preferences: ^2.5.5
+  flutter_secure_storage: ^11.2.0
 
 dev_dependencies:
   flutter_test:

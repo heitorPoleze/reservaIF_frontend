@@ -1,0 +1,48 @@
+class ApiException implements Exception {
+  final String mensagem;
+
+  ApiException(this.mensagem);
+
+  bool get indicaAusenciaDeRegistros {
+    final normalizada = _semAcentos(mensagem.toLowerCase());
+
+    return normalizada.contains('nao possui') ||
+        normalizada.contains('nenhum') ||
+        normalizada.contains('nenhuma') ||
+        normalizada.contains('sem registro');
+  }
+
+  @override
+  String toString() => mensagem;
+}
+
+class SemConexaoException extends ApiException {
+  SemConexaoException(super.mensagem);
+}
+
+class TempoEsgotadoException extends SemConexaoException {
+  final bool podeTerSidoConcluida;
+
+  TempoEsgotadoException(super.mensagem, {required this.podeTerSidoConcluida});
+}
+
+class ErroDoServidorException extends ApiException {
+  ErroDoServidorException(super.mensagem);
+}
+
+class ApiValidationException extends ApiException {
+  final List<String> mensagens;
+
+  ApiValidationException(this.mensagens) : super(mensagens.join('\n'));
+}
+
+String _semAcentos(String texto) {
+  const comAcento = 'áàãâäéèêëíìîïóòõôöúùûüçÁÀÃÂÄÉÈÊËÍÌÎÏÓÒÕÔÖÚÙÛÜÇ';
+  const semAcento = 'aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC';
+
+  var resultado = texto;
+  for (var i = 0; i < comAcento.length; i++) {
+    resultado = resultado.replaceAll(comAcento[i], semAcento[i]);
+  }
+  return resultado;
+}
