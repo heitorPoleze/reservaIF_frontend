@@ -83,6 +83,13 @@ void main() {
       expect(Perfil.coordenador.podeAprovar, isTrue);
       expect(Perfil.values.where((perfil) => perfil.podeAprovar), hasLength(1));
     });
+
+    test('só aluno não acompanha pendências', () {
+      expect(
+        Perfil.values.where((perfil) => !perfil.acompanhaPendencias),
+        [Perfil.aluno],
+      );
+    });
   });
 
   group('TipoRecorrencia e DiaSemana', () {

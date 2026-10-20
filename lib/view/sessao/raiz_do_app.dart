@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:reserva_if/view/telas/tela_cadastro.dart';
 import 'package:reserva_if/view/telas/tela_inicial.dart';
 import 'package:reserva_if/view/telas/tela_login.dart';
-import 'package:reserva_if/view/telas/tela_principal.dart';
+import 'package:reserva_if/view/principal/tela_principal.dart';
 import 'package:reserva_if/view/widgets/tela_de_abertura.dart';
 import 'package:reserva_if/viewmodel/sessao/sessao_viewmodel.dart';
 

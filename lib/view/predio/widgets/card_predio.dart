@@ -33,7 +33,7 @@ class CardPredio extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.meeting_room_outlined,
+                  Icons.door_front_door_outlined,
                   size: 20,
                   color: esquema.primary,
                 ),
