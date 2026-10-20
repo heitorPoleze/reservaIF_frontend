@@ -30,14 +30,14 @@ void main() {
     });
   });
 
-  test('toJson serializa o tipo inferido', () {
+  test('toJson manda a entrada normalizada e o tipo LOCAL da API', () {
     final credencial = Credencial.criar(
       entrada: '1234567',
       senha: 'segredo123',
     );
 
     expect(credencial.toJson(), {
-      'tipoEntrada': 'SIAPE',
+      'tipoEntrada': Credencial.tipoEntradaLocal,
       'entrada': '1234567',
       'senha': 'segredo123',
     });
@@ -55,5 +55,13 @@ void main() {
     expect(copia.entrada, '20241tsi0063');
     expect(copia.senha, 'segredo123');
     expect(credencial.copyWith(senha: 'nova').tipoEntrada, TipoEntrada.siape);
+  });
+
+  test('tipoEntrada LOCAL é 0, como no Swagger', () {
+    expect(Credencial.tipoEntradaLocal, 0);
+    expect(
+      Credencial.criar(entrada: '20241TSI0063', senha: 's').toJson()['entrada'],
+      '20241tsi0063',
+    );
   });
 }

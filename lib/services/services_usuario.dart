@@ -1,5 +1,6 @@
 import 'package:reserva_if/model/usuario/cadastro_usuario.dart';
 import 'package:reserva_if/model/usuario/departamento_elegivel.dart';
+import 'package:reserva_if/model/usuario/perfil_usuario.dart';
 import 'package:reserva_if/services/http/ambiente.dart';
 import 'package:reserva_if/services/http/requisicao_http.dart';
 import 'package:reserva_if/services/services_base.dart';
@@ -41,6 +42,17 @@ class ServicesUsuario extends BaseService {
       },
       erroMsg: 'Não foi possível concluir o cadastro.',
       acao: 'concluir o cadastro',
+    );
+  }
+
+  Future<PerfilUsuario> buscarPerfil() {
+    return executarRequisicao(
+      requisicao: RequisicaoHttp.get(rota('me')),
+      aoSucesso: (resposta) =>
+          extrairObjeto(resposta.bodyBytes, PerfilUsuario.fromJson),
+      errosPorStatus: {404: 'Perfil não encontrado.'},
+      erroMsg: 'Não foi possível carregar o seu perfil.',
+      acao: 'carregar o perfil',
     );
   }
 

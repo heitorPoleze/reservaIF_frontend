@@ -2,3 +2,5 @@
 
 -> implemente a tela principal de agendamento (assets\images\prints_figma\agendamento_inicial.png). O widget de calendário deve ser o presente no app do cafeicultura, mas com alterações: quando se clica no dia do calendário, mostra abaixo os horários do dia (com Livre ou Reservado). Ao clicar no horário livre, mostra um popup (como quando se clica no calendário do app de cafeicultura) "Horário Livre" e o botão de "Reservar Horário". Quando está Reservado e se clica, abre o pop up com os detalhes do agendamento. Os detalhes do agendamento devem ser como o card de atividade do app de café, mas mostrando todas as informações da atividade. Em "Selecionar Sala", faz a requisição das salas disponíveis no prédio selecionado e mostra as salas no select. 
 Nessa tela de detalhes do agendamento, a COORDENAÇÃO 
+
+Caso o usuário seja autenticado, vá para uma página que tenha escrito somente "logado com sucesso", para eu poder identificar quando está logado e quando não está (tela_principal)

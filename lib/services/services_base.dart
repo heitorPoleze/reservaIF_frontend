@@ -25,9 +25,11 @@ abstract class BaseService {
     return query == null ? uri : uri.replace(queryParameters: query);
   }
 
-  static String? sessionCookie;
+  static String? tokenDeSessao;
 
   static void Function()? aoPerderConexao;
+
+  static void Function()? aoSessaoExpirar;
 
   static bool logarCorpoDeSucesso = false;
 
@@ -66,25 +68,16 @@ abstract class BaseService {
       'Accept': 'application/json',
     };
 
-    if (sessionCookie != null) {
-      headers['Cookie'] = sessionCookie!;
+    final token = tokenDeSessao;
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
     }
 
     return headers;
   }
 
-  static void atualizarCookie(http.Response response) {
-    final rawCookie = response.headers['set-cookie'];
-
-    if (rawCookie == null) {
-      debugPrint('O back-end não enviou cookie de sessão nesta resposta.');
-      return;
-    }
-
-    final fimDoValor = rawCookie.indexOf(';');
-    sessionCookie =
-        fimDoValor == -1 ? rawCookie : rawCookie.substring(0, fimDoValor);
-  }
+  bool sessaoExpirou(http.Response response) =>
+      response.statusCode == 401 && tokenDeSessao != null;
 
   bool sucesso(http.Response response) =>
       response.statusCode >= 200 && response.statusCode < 300;
@@ -125,6 +118,12 @@ abstract class BaseService {
       if (erroDeStatus != null) {
         _logarResposta(response, acao);
         throw ApiException(erroDeStatus);
+      }
+
+      if (sessaoExpirou(response)) {
+        _logarResposta(response, acao);
+        aoSessaoExpirar?.call();
+        throw SessaoExpiradaException();
       }
 
       if (aoListaVazia != null && isEmptyList(response)) {

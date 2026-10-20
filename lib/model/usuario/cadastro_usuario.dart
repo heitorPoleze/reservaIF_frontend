@@ -1,3 +1,4 @@
+import 'credencial/credencial.dart';
 import 'perfil.dart';
 import 'tipo_credencial.dart';
 
@@ -11,8 +12,6 @@ class CadastroUsuario {
     required this.senha,
     required this.vinculoId,
   });
-
-  static const int entradaLocal = 0;
 
   final Perfil perfil;
 
@@ -38,6 +37,9 @@ class CadastroUsuario {
     return tipo;
   }
 
+  Credencial get credencial =>
+      Credencial.criar(entrada: identificador, senha: senha);
+
   String get _chaveDoVinculo => perfil.vinculaCurso ? 'cursoId' : 'departamentoId';
 
   String? get _telefoneInformado {
@@ -50,11 +52,7 @@ class CadastroUsuario {
         'email': email.trim().toLowerCase(),
         if (_telefoneInformado != null) 'telefone': _telefoneInformado,
         'tipoCredencial': tipoCredencial.toJson(),
-        'credencial': {
-          'tipoEntrada': entradaLocal,
-          'entrada': identificador.trim(),
-          'senha': senha,
-        },
+        'credencial': credencial.toJson(),
         _chaveDoVinculo: vinculoId,
       };
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reserva_if/model/predio/predio.dart';
+import 'package:reserva_if/view/perfil/tela_perfil.dart';
 import 'package:reserva_if/view/telas/tela_edificios.dart';
 
 class TelaPrincipal extends StatefulWidget {
@@ -26,11 +27,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
             mensagem: 'A tela de materiais ainda não está disponível.',
             icone: Icons.inventory_2_outlined,
           ),
-          const _DestinoIndisponivel(
-            titulo: 'Perfil',
-            mensagem: 'A tela de perfil ainda não está disponível.',
-            icone: Icons.person_outline,
-          ),
+          const TelaPerfil(),
         ],
       ),
       bottomNavigationBar: NavigationBar(

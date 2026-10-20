@@ -30,6 +30,12 @@ class ErroDoServidorException extends ApiException {
   ErroDoServidorException(super.mensagem);
 }
 
+class SessaoExpiradaException extends ApiException {
+  SessaoExpiradaException([super.mensagem = mensagemPadrao]);
+
+  static const String mensagemPadrao = 'Sua sessão expirou. Entre novamente.';
+}
+
 class ApiValidationException extends ApiException {
   final List<String> mensagens;
 

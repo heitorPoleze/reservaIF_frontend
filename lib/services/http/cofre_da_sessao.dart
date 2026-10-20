@@ -3,27 +3,27 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class CofreDaSessao {
-  static const _chaveDoCookie = 'cookie_sessao';
+  static const _chaveDoToken = 'token_sessao';
   static const _cofre = FlutterSecureStorage();
 
-  static Future<String?> lerCookie() async {
+  static Future<String?> lerToken() async {
     try {
-      return await _cofre.read(key: _chaveDoCookie);
+      return await _cofre.read(key: _chaveDoToken);
     } on PlatformException catch (e) {
       debugPrint('Cofre da sessão ilegível, sessão descartada: ${e.code}');
-      await apagarCookie();
+      await apagarToken();
       return null;
     }
   }
 
-  static Future<void> gravarCookie(String cookie) =>
-      _cofre.write(key: _chaveDoCookie, value: cookie);
+  static Future<void> gravarToken(String token) =>
+      _cofre.write(key: _chaveDoToken, value: token);
 
-  static Future<void> apagarCookie() async {
+  static Future<void> apagarToken() async {
     try {
-      await _cofre.delete(key: _chaveDoCookie);
+      await _cofre.delete(key: _chaveDoToken);
     } on PlatformException catch (e) {
-      debugPrint('Falha ao apagar o cookie do cofre: ${e.code}');
+      debugPrint('Falha ao apagar o token do cofre: ${e.code}');
     }
   }
 }

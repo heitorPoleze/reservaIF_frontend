@@ -95,6 +95,33 @@ void main() {
     test('coordenador não serializa', () {
       expect(() => _cadastro(Perfil.coordenador).toJson(), throwsStateError);
     });
+
+    test('a credencial é a mesma do login, com matrícula normalizada', () {
+      const cadastro = CadastroUsuario(
+        perfil: Perfil.aluno,
+        nome: 'Bia',
+        email: 'bia@ifes.edu.br',
+        identificador: '20241TSI0063',
+        senha: 'SenhaSegura1',
+        vinculoId: 'curso-si',
+      );
+
+      expect(cadastro.toJson()['credencial'], cadastro.credencial.toJson());
+      expect(cadastro.toJson()['credencial']['entrada'], '20241tsi0063');
+    });
+
+    test('identificador inválido falha alto ao serializar', () {
+      const cadastro = CadastroUsuario(
+        perfil: Perfil.aluno,
+        nome: 'Bia',
+        email: 'bia@ifes.edu.br',
+        identificador: 'abc',
+        senha: 'SenhaSegura1',
+        vinculoId: 'curso-si',
+      );
+
+      expect(cadastro.toJson, throwsArgumentError);
+    });
   });
 
   group('DepartamentoElegivel', () {

@@ -62,6 +62,27 @@ void main() {
     test('falha alto em valor desconhecido', () {
       expect(() => Perfil.fromJson('professor'), throwsArgumentError);
     });
+
+    test('nivelAcesso espelha o Swagger e faz ida e volta', () {
+      expect(Perfil.fromNivelAcesso(0), Perfil.aluno);
+      expect(Perfil.fromNivelAcesso(1), Perfil.professor);
+      expect(Perfil.fromNivelAcesso(2), Perfil.coordenador);
+      expect(Perfil.fromNivelAcesso(3), Perfil.tecnico);
+      for (final perfil in Perfil.values) {
+        expect(Perfil.fromNivelAcesso(perfil.nivelAcesso), perfil);
+      }
+    });
+
+    test('nivelAcesso desconhecido ou em texto falha alto', () {
+      expect(() => Perfil.fromNivelAcesso(4), throwsArgumentError);
+      expect(() => Perfil.fromNivelAcesso('2'), throwsArgumentError);
+      expect(() => Perfil.fromNivelAcesso(null), throwsArgumentError);
+    });
+
+    test('só coordenador aprova', () {
+      expect(Perfil.coordenador.podeAprovar, isTrue);
+      expect(Perfil.values.where((perfil) => perfil.podeAprovar), hasLength(1));
+    });
   });
 
   group('TipoRecorrencia e DiaSemana', () {

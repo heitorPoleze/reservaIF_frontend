@@ -29,7 +29,7 @@ abstract class Usuario {
 
   final Perfil perfil;
 
-  bool get podeAprovar => perfil == Perfil.coordenador;
+  bool get podeAprovar => perfil.podeAprovar;
 
   static Usuario fromJson(Map<String, dynamic> json) =>
       switch (Perfil.fromJson(json['perfil'])) {

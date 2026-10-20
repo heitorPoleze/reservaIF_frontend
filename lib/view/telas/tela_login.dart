@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:reserva_if/utils/validator.dart';
 import 'package:reserva_if/view/widgets/botao_padrao.dart';
 import 'package:reserva_if/view/widgets/campo_texto.dart';
+import 'package:reserva_if/view/widgets/feedback_usuario.dart';
+import 'package:reserva_if/view/widgets/formulario/validacao_formulario.dart';
 import 'package:reserva_if/view/widgets/reserva_if_logo.dart';
 import 'package:reserva_if/view/widgets/scaffold_de_autenticacao.dart';
+import 'package:reserva_if/viewmodel/sessao/sessao_viewmodel.dart';
 
 class TelaLogin extends StatefulWidget {
-  final VoidCallback? aoEntrar;
-
-  const TelaLogin({super.key, this.aoEntrar});
+  const TelaLogin({super.key});
 
   @override
   State<TelaLogin> createState() => _TelaLoginState();
@@ -16,16 +18,35 @@ class TelaLogin extends StatefulWidget {
 
 class _TelaLoginState extends State<TelaLogin> {
   final _chaveDoFormulario = GlobalKey<FormState>();
+  final _entradaController = TextEditingController();
+  final _senhaController = TextEditingController();
 
-  void _entrar() {
-    if (_chaveDoFormulario.currentState?.validate() ?? false) {
-      widget.aoEntrar?.call();
-    }
+  @override
+  void dispose() {
+    _entradaController.dispose();
+    _senhaController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _entrar() async {
+    if (!validarRevelandoCampoInvalido(_chaveDoFormulario)) return;
+
+    final sessao = context.read<SessaoViewModel>();
+    final entrou = await sessao.entrar(
+      entrada: _entradaController.text,
+      senha: _senhaController.text,
+    );
+
+    if (!mounted || entrou) return;
+
+    final mensagemErro = sessao.mensagemErro;
+    if (mensagemErro != null) mostrarErro(context, mensagemErro);
   }
 
   @override
   Widget build(BuildContext context) {
     final esquema = Theme.of(context).colorScheme;
+    final ocupado = context.watch<SessaoViewModel>().isLoading;
 
     return ScaffoldDeAutenticacao(
       corpo: LayoutBuilder(
@@ -69,6 +90,8 @@ class _TelaLoginState extends State<TelaLogin> {
                             children: [
                               CampoTexto(
                                 rotulo: 'Matrícula/SIAPE',
+                                controller: _entradaController,
+                                habilitado: !ocupado,
                                 tipoDeTeclado: TextInputType.text,
                                 acaoDoTeclado: TextInputAction.next,
                                 validador: Validator.validarEntradaDeLogin,
@@ -76,7 +99,9 @@ class _TelaLoginState extends State<TelaLogin> {
                               const SizedBox(height: 20),
                               CampoTexto(
                                 rotulo: 'Senha',
+                                controller: _senhaController,
                                 ehSenha: true,
+                                habilitado: !ocupado,
                                 acaoDoTeclado: TextInputAction.done,
                                 validador: Validator.validarSenhaLogin,
                                 aoSubmeter: (_) => _entrar(),
@@ -84,6 +109,7 @@ class _TelaLoginState extends State<TelaLogin> {
                               const SizedBox(height: 24),
                               BotaoPadrao(
                                 texto: 'Entrar',
+                                carregando: ocupado,
                                 aoPressionar: _entrar,
                               ),
                             ],

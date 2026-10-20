@@ -1,16 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:reserva_if/services/http/ambiente.dart';
+import 'package:reserva_if/services/services_autenticacao.dart';
 import 'package:reserva_if/services/services_base.dart';
-import 'package:reserva_if/view/telas/tela_inicial.dart';
-import 'package:reserva_if/view/telas/tela_login.dart';
-import 'package:reserva_if/view/telas/tela_cadastro.dart';
-import 'package:reserva_if/view/telas/tela_principal.dart';
+import 'package:reserva_if/services/services_usuario.dart';
+import 'package:reserva_if/services/sessao/repositorio_de_sessao.dart';
+import 'package:reserva_if/view/sessao/raiz_do_app.dart';
 import 'package:reserva_if/view/theme/app_tema.dart';
 import 'package:reserva_if/view/widgets/tela_sem_conexao.dart';
+import 'package:reserva_if/viewmodel/sessao/sessao_viewmodel.dart';
 import 'package:reserva_if/viewmodel/status_de_conexao.dart';
 
 void main() async {
@@ -28,10 +31,19 @@ void main() async {
   final statusDeConexao = StatusDeConexao();
   BaseService.aoPerderConexao = statusDeConexao.registrarFalha;
 
+  final sessao = SessaoViewModel(
+    autenticacao: ServicesAutenticacao(),
+    usuarios: ServicesUsuario(),
+    repositorio: RepositorioDeSessaoLocal(),
+  );
+  BaseService.aoSessaoExpirar = sessao.encerrarPorExpiracao;
+  unawaited(sessao.restaurar());
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<StatusDeConexao>.value(value: statusDeConexao),
+        ChangeNotifierProvider<SessaoViewModel>.value(value: sessao),
       ],
       child: const ReservaIfApp(),
     ),
@@ -54,31 +66,7 @@ class ReservaIfApp extends StatelessWidget {
       ],
       supportedLocales: const [Locale('pt', 'BR')],
       builder: (context, child) => GuardaDeConexao(filho: child!),
-      home: Builder(
-        builder: (context) => TelaInicialDeslogada(
-          aoEntrar: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => TelaLogin(
-                  aoEntrar: () {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const TelaPrincipal(),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                ),
-              ),
-            );
-          },
-          aoCadastrar: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const TelaCadastro()),
-            );
-          },
-        ),
-      ),
+      home: const RaizDoApp(),
     );
   }
 }

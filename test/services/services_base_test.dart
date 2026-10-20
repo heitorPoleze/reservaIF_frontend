@@ -62,6 +62,16 @@ class ServiceDeTeste extends BaseService {
       acao: 'excluir o item',
     );
   }
+
+  Future<bool> autenticar() {
+    return executarRequisicao(
+      requisicao: RequisicaoHttp.post(rota('login'), corpo: const {}),
+      aoSucesso: (_) => true,
+      errosPorStatus: {401: 'Credenciais inválidas.'},
+      erroMsg: 'Erro ao autenticar.',
+      acao: 'autenticar',
+    );
+  }
 }
 
 class ServiceExternoDeTeste extends ServiceExterno {
@@ -84,8 +94,9 @@ class ServiceExternoDeTeste extends ServiceExterno {
 
 void main() {
   setUp(() {
-    BaseService.sessionCookie = null;
+    BaseService.tokenDeSessao = null;
     BaseService.aoPerderConexao = null;
+    BaseService.aoSessaoExpirar = null;
   });
 
   group('rota', () {
@@ -152,8 +163,8 @@ void main() {
   });
 
   group('sessão', () {
-    test('o cookie guardado viaja em toda requisição', () async {
-      BaseService.sessionCookie = 'sid=abc123';
+    test('o token guardado viaja como Bearer em toda requisição', () async {
+      BaseService.tokenDeSessao = 'abc123';
       late http.Request enviada;
 
       await comRespostaFixa(
@@ -162,21 +173,23 @@ void main() {
         capturar: (requisicao) => enviada = requisicao,
       );
 
-      expect(enviada.headers['Cookie'], 'sid=abc123');
+      expect(enviada.headers['Authorization'], 'Bearer abc123');
     });
 
-    test('atualizarCookie guarda só o par nome=valor', () {
-      BaseService.atualizarCookie(
-        http.Response('', 200, headers: {
-          'set-cookie': 'sid=abc123; Path=/; HttpOnly',
-        }),
+    test('sem token não há cabeçalho Authorization', () async {
+      late http.Request enviada;
+
+      await comRespostaFixa(
+        () => ServiceDeTeste().listar(),
+        respostaJson({'data': []}, 200),
+        capturar: (requisicao) => enviada = requisicao,
       );
 
-      expect(BaseService.sessionCookie, 'sid=abc123');
+      expect(enviada.headers.containsKey('Authorization'), isFalse);
     });
 
-    test('service externo não carrega o cookie', () async {
-      BaseService.sessionCookie = 'sid=abc123';
+    test('service externo não carrega o token', () async {
+      BaseService.tokenDeSessao = 'abc123';
       late http.Request enviada;
 
       await comRespostaFixa(
@@ -185,8 +198,78 @@ void main() {
         capturar: (requisicao) => enviada = requisicao,
       );
 
-      expect(enviada.headers.containsKey('Cookie'), isFalse);
+      expect(enviada.headers.containsKey('Authorization'), isFalse);
       expect(enviada.url.host, 'terceiro.exemplo');
+    });
+
+    test('401 com token lança SessaoExpiradaException e aciona o gancho',
+        () async {
+      BaseService.tokenDeSessao = 'expirado';
+      var avisou = false;
+      BaseService.aoSessaoExpirar = () => avisou = true;
+
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          () => ServiceDeTeste().listar(),
+          respostaJson(
+            {'erro': 'NAO_AUTENTICADO', 'mensagem': 'Token expirado.'},
+            401,
+          ),
+        ),
+      );
+
+      expect(erro, isA<SessaoExpiradaException>());
+      expect(erro.mensagem, SessaoExpiradaException.mensagemPadrao);
+      expect(avisou, isTrue);
+    });
+
+    test('401 sem token é erro comum com a mensagem do backend', () async {
+      var avisou = false;
+      BaseService.aoSessaoExpirar = () => avisou = true;
+
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          () => ServiceDeTeste().listar(),
+          respostaJson(
+            {'erro': 'NAO_AUTENTICADO', 'mensagem': 'Token ausente.'},
+            401,
+          ),
+        ),
+      );
+
+      expect(erro, isNot(isA<SessaoExpiradaException>()));
+      expect(erro.mensagem, contains('Token ausente.'));
+      expect(avisou, isFalse);
+    });
+
+    test('errosPorStatus para 401 vence o gancho de expiração', () async {
+      BaseService.tokenDeSessao = 'abc123';
+      var avisou = false;
+      BaseService.aoSessaoExpirar = () => avisou = true;
+
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          () => ServiceDeTeste().autenticar(),
+          respostaJson({'erro': 'NAO_AUTENTICADO', 'mensagem': 'x'}, 401),
+        ),
+      );
+
+      expect(erro.mensagem, 'Credenciais inválidas.');
+      expect(erro, isNot(isA<SessaoExpiradaException>()));
+      expect(avisou, isFalse);
+    });
+
+    test('expiração não vira lista vazia mesmo com aoListaVazia', () async {
+      BaseService.tokenDeSessao = 'expirado';
+
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          () => ServiceDeTeste().listar(),
+          respostaJson({'erro': 'NAO_AUTENTICADO', 'mensagem': 'x'}, 401),
+        ),
+      );
+
+      expect(erro, isA<SessaoExpiradaException>());
     });
   });
 

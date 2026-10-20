@@ -24,6 +24,8 @@ class Credencial {
     );
   }
 
+  static const int tipoEntradaLocal = 0;
+
   final TipoEntrada tipoEntrada;
 
   final String entrada;
@@ -42,7 +44,7 @@ class Credencial {
       );
 
   Map<String, dynamic> toJson() => {
-        'tipoEntrada': tipoEntrada.toJson(),
+        'tipoEntrada': tipoEntradaLocal,
         'entrada': entrada,
         'senha': senha,
       };

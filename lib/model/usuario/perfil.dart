@@ -3,16 +3,18 @@ import 'credencial/tipo_entrada.dart';
 import 'tipo_credencial.dart';
 
 enum Perfil {
-  aluno('ALUNO', 'Aluno'),
-  tecnico('TECNICO', 'Técnico'),
-  professor('PROFESSOR', 'Professor'),
-  coordenador('COORDENADOR', 'Coordenador');
+  aluno('ALUNO', 'Aluno', 0),
+  tecnico('TECNICO', 'Técnico', 3),
+  professor('PROFESSOR', 'Professor', 1),
+  coordenador('COORDENADOR', 'Coordenador', 2);
 
-  const Perfil(this.valorJson, this.rotulo);
+  const Perfil(this.valorJson, this.rotulo, this.nivelAcesso);
 
   final String valorJson;
 
   final String rotulo;
+
+  final int nivelAcesso;
 
   TipoCredencial? get tipoCredencial => switch (this) {
         Perfil.aluno => TipoCredencial.matriculaAluno,
@@ -30,8 +32,13 @@ enum Perfil {
 
   bool get vinculaCurso => this == Perfil.aluno;
 
+  bool get podeAprovar => this == Perfil.coordenador;
+
   static Perfil fromJson(Object? json) =>
       enumDoJson(values, (perfil) => perfil.valorJson, json);
+
+  static Perfil fromNivelAcesso(Object? json) =>
+      enumDoJson(values, (perfil) => perfil.nivelAcesso, json);
 
   String toJson() => valorJson;
 }

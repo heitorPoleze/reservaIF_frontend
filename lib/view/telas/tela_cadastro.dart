@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:reserva_if/model/usuario/credencial/tipo_entrada.dart';
 import 'package:reserva_if/model/usuario/departamento_elegivel.dart';
 import 'package:reserva_if/model/usuario/perfil.dart';
 import 'package:reserva_if/services/services_usuario.dart';
 import 'package:reserva_if/utils/validator.dart';
+import 'package:reserva_if/view/telas/tela_login.dart';
 import 'package:reserva_if/view/theme/app_estilos.dart';
 import 'package:reserva_if/view/widgets/botao_padrao.dart';
 import 'package:reserva_if/view/widgets/caixa_aviso.dart';
@@ -14,12 +16,11 @@ import 'package:reserva_if/view/widgets/feedback_usuario.dart';
 import 'package:reserva_if/view/widgets/formulario/validacao_formulario.dart';
 import 'package:reserva_if/view/widgets/reserva_if_logo.dart';
 import 'package:reserva_if/view/widgets/scaffold_de_autenticacao.dart';
+import 'package:reserva_if/viewmodel/sessao/sessao_viewmodel.dart';
 import 'package:reserva_if/viewmodel/usuario/cadastro_viewmodel.dart';
 
 class TelaCadastro extends StatefulWidget {
-  final VoidCallback? aoCadastrar;
-
-  const TelaCadastro({super.key, this.aoCadastrar});
+  const TelaCadastro({super.key});
 
   @override
   State<TelaCadastro> createState() => _TelaCadastroState();
@@ -72,23 +73,29 @@ class _TelaCadastroState extends State<TelaCadastro> {
 
     if (!mounted) return;
 
-    final mensagemErro = _viewModel.mensagemErro;
     if (!cadastrou) {
+      final mensagemErro = _viewModel.mensagemErro;
       if (mensagemErro != null) mostrarErro(context, mensagemErro);
       return;
     }
 
-    mostrarSucesso(context, 'Conta criada. Entre com seus dados.');
-    final aoCadastrar = widget.aoCadastrar;
-    if (aoCadastrar != null) {
-      aoCadastrar();
-    } else {
-      Navigator.of(context).pop();
-    }
+    final entrou = await context.read<SessaoViewModel>().entrar(
+          entrada: _identificadorController.text,
+          senha: _senhaController.text,
+        );
+
+    if (!mounted || entrou) return;
+
+    mostrarInfo(context, 'Conta criada. Entre com seus dados.');
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const TelaLogin()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final entrando = context.watch<SessaoViewModel>().isLoading;
+
     return ScaffoldDeAutenticacao(
       corpo: Center(
         child: SingleChildScrollView(
@@ -102,56 +109,61 @@ class _TelaCadastroState extends State<TelaCadastro> {
             constraints: const BoxConstraints(maxWidth: 480),
             child: ListenableBuilder(
               listenable: _viewModel,
-              builder: (context, _) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const _CabecalhoDoCadastro(),
-                  const SizedBox(height: 24),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Form(
-                        key: _chaveDoFormulario,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _SecaoConta(
-                              perfil: _viewModel.perfil,
-                              habilitado: !_viewModel.isLoading,
-                              aoSelecionar: _selecionarPerfil,
-                            ),
-                            const _DivisorDeSecao(),
-                            _SecaoDadosPessoais(
-                              nomeController: _nomeController,
-                              emailController: _emailController,
-                              telefoneController: _telefoneController,
-                              habilitado: !_viewModel.isLoading,
-                            ),
-                            const _DivisorDeSecao(),
-                            _SecaoVinculo(
-                              viewModel: _viewModel,
-                              identificadorController: _identificadorController,
-                            ),
-                            const _DivisorDeSecao(),
-                            _SecaoAcesso(
-                              senhaController: _senhaController,
-                              habilitado: !_viewModel.isLoading,
-                              aoConcluir: _cadastrar,
-                            ),
-                            const SizedBox(height: 28),
-                            BotaoPadrao(
-                              texto: 'Criar conta',
-                              carregando: _viewModel.isLoading,
-                              aoPressionar:
-                                  _viewModel.podeEnviar ? _cadastrar : null,
-                            ),
-                          ],
+              builder: (context, _) {
+                final ocupado = _viewModel.isLoading || entrando;
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const _CabecalhoDoCadastro(),
+                    const SizedBox(height: 24),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Form(
+                          key: _chaveDoFormulario,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _SecaoConta(
+                                perfil: _viewModel.perfil,
+                                habilitado: !ocupado,
+                                aoSelecionar: _selecionarPerfil,
+                              ),
+                              const _DivisorDeSecao(),
+                              _SecaoDadosPessoais(
+                                nomeController: _nomeController,
+                                emailController: _emailController,
+                                telefoneController: _telefoneController,
+                                habilitado: !ocupado,
+                              ),
+                              const _DivisorDeSecao(),
+                              _SecaoVinculo(
+                                viewModel: _viewModel,
+                                identificadorController: _identificadorController,
+                                habilitado: !ocupado,
+                              ),
+                              const _DivisorDeSecao(),
+                              _SecaoAcesso(
+                                senhaController: _senhaController,
+                                habilitado: !ocupado,
+                                aoConcluir: _cadastrar,
+                              ),
+                              const SizedBox(height: 28),
+                              BotaoPadrao(
+                                texto: 'Criar conta',
+                                carregando: ocupado,
+                                aoPressionar:
+                                    _viewModel.podeEnviar ? _cadastrar : null,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -297,10 +309,12 @@ class _SecaoDadosPessoais extends StatelessWidget {
 class _SecaoVinculo extends StatelessWidget {
   final CadastroViewModel viewModel;
   final TextEditingController identificadorController;
+  final bool habilitado;
 
   const _SecaoVinculo({
     required this.viewModel,
     required this.identificadorController,
+    required this.habilitado,
   });
 
   static const _duracaoDaTroca = Duration(milliseconds: 200);
@@ -331,6 +345,7 @@ class _SecaoVinculo extends StatelessWidget {
               key: ValueKey(viewModel.perfil.vinculaCurso),
               viewModel: viewModel,
               identificadorController: identificadorController,
+              habilitado: habilitado,
             ),
           ),
         ),
@@ -349,11 +364,13 @@ class _SecaoVinculo extends StatelessWidget {
 class _CamposDoVinculo extends StatelessWidget {
   final CadastroViewModel viewModel;
   final TextEditingController identificadorController;
+  final bool habilitado;
 
   const _CamposDoVinculo({
     super.key,
     required this.viewModel,
     required this.identificadorController,
+    required this.habilitado,
   });
 
   @override
@@ -370,14 +387,14 @@ class _CamposDoVinculo extends StatelessWidget {
           dica: ehMatricula
               ? 'Como aparece no seu comprovante'
               : 'Somente números',
-          habilitado: !viewModel.isLoading,
+          habilitado: habilitado,
           tipoDeTeclado:
               ehMatricula ? TextInputType.text : TextInputType.number,
           acaoDoTeclado: TextInputAction.next,
           validador: Validator.validarIdentificador(identificador),
         ),
         const SizedBox(height: AppEstilos.espacoEntreCampos),
-        _SeletorDeVinculo(viewModel: viewModel),
+        _SeletorDeVinculo(viewModel: viewModel, habilitado: habilitado),
       ],
     );
   }
@@ -385,8 +402,9 @@ class _CamposDoVinculo extends StatelessWidget {
 
 class _SeletorDeVinculo extends StatelessWidget {
   final CadastroViewModel viewModel;
+  final bool habilitado;
 
-  const _SeletorDeVinculo({required this.viewModel});
+  const _SeletorDeVinculo({required this.viewModel, required this.habilitado});
 
   @override
   Widget build(BuildContext context) {
@@ -418,7 +436,7 @@ class _SeletorDeVinculo extends StatelessWidget {
       opcoes: viewModel.opcoesDeVinculo,
       rotuloDe: (opcao) => opcao.rotuloDeVinculo,
       dica: carregando ? 'Carregando…' : 'Selecione',
-      habilitado: !viewModel.isLoading && !carregando,
+      habilitado: habilitado && !carregando,
       validador: Validator.selecaoObrigatoria,
       aoMudar: (opcao) => viewModel.selecionarVinculo(opcao?.id),
     );

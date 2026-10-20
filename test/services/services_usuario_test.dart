@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:reserva_if/model/usuario/cadastro_usuario.dart';
 import 'package:reserva_if/model/usuario/perfil.dart';
+import 'package:reserva_if/services/http/exceptions/api_exceptions.dart';
+import 'package:reserva_if/services/services_base.dart';
 import 'package:reserva_if/services/services_usuario.dart';
 
 import 'mock_http.dart';
@@ -20,8 +22,29 @@ CadastroUsuario _cadastro(Perfil perfil) => CadastroUsuario(
 Map<String, dynamic> _corpo(http.Request requisicao) =>
     jsonDecode(requisicao.body) as Map<String, dynamic>;
 
+const _perfil = {
+  'uuid': '64b7f0c2a1b2c3d4e5f60333',
+  'nome': 'Prof. Carlos Mendes',
+  'email': 'carlos.mendes@ifes.edu.br',
+  'telefone': null,
+  'nivelAcesso': 2,
+  'role': 'COORDENADOR',
+  'tipoCredencial': 'SIAPE_DOCENTE',
+  'identificador': '1543210',
+  'ativo': true,
+  'criadoEm': '2026-10-20T12:00:00.000Z',
+  'aluno': null,
+  'servidor': null,
+  'coordenacoes': [],
+};
+
 void main() {
   final service = ServicesUsuario(chaveDeProvisionamento: 'chave-dev');
+
+  setUp(() {
+    BaseService.tokenDeSessao = null;
+    BaseService.aoSessaoExpirar = null;
+  });
 
   group('buscarDepartamentosElegiveis', () {
     test('converte o catálogo da API', () async {
@@ -136,6 +159,54 @@ void main() {
 
       expect(erro.mensagem, contains('ja cadastrado'));
       expect(erro.mensagem, isNot(contains('CONFLITO')));
+    });
+  });
+
+  group('buscarPerfil', () {
+    test('GET /usuarios/me com o token da sessão', () async {
+      BaseService.tokenDeSessao = 'abc123';
+      http.Request? enviada;
+
+      final perfil = await comRespostaFixa(
+        service.buscarPerfil,
+        respostaJson(_perfil, 200),
+        capturar: (requisicao) => enviada = requisicao,
+      );
+
+      expect(enviada!.method, 'GET');
+      expect(enviada!.url.path, endsWith('/usuarios/me'));
+      expect(enviada!.headers['Authorization'], 'Bearer abc123');
+      expect(perfil.nome, 'Prof. Carlos Mendes');
+      expect(perfil.perfil, Perfil.coordenador);
+    });
+
+    test('401 com token expirado aciona o gancho de sessão', () async {
+      BaseService.tokenDeSessao = 'expirado';
+      var expirou = false;
+      BaseService.aoSessaoExpirar = () => expirou = true;
+
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          service.buscarPerfil,
+          respostaJson({'erro': 'NAO_AUTENTICADO', 'mensagem': 'x'}, 401),
+        ),
+      );
+
+      expect(erro, isA<SessaoExpiradaException>());
+      expect(expirou, isTrue);
+    });
+
+    test('404 vira mensagem própria', () async {
+      BaseService.tokenDeSessao = 'abc123';
+
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          service.buscarPerfil,
+          respostaJson({'erro': 'NAO_ENCONTRADO', 'mensagem': 'x'}, 404),
+        ),
+      );
+
+      expect(erro.mensagem, 'Perfil não encontrado.');
     });
   });
 }
