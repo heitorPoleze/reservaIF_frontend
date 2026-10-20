@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
 import 'package:reserva_if/model/usuario/perfil_usuario.dart';
+import 'package:reserva_if/services/services_cancelamento.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/abas_por_status.dart';
 import 'package:reserva_if/view/reserva/widgets/acoes_de_analise.dart';
@@ -43,6 +44,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
     _viewModel = ReservasPerfilViewModel(
       usuario: usuario,
       service: ServicesReserva(),
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: context.read<ReservasMudaram>(),
     )..carregar();
   }

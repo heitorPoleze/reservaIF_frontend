@@ -33,11 +33,20 @@ enum Perfil {
 
   bool get podeAprovar => this == Perfil.coordenador;
 
+  bool get solicitaCancelamentoDeAluno => this == Perfil.professor;
+
   bool get acompanhaPendencias => this != Perfil.aluno;
 
   bool get exigeResponsavel => this == Perfil.aluno;
 
   bool get criaRecorrencia => this == Perfil.coordenador;
+  List<Perfil> get perfisDeResponsavel => switch (this) {
+    Perfil.aluno => const [Perfil.coordenador, Perfil.professor, Perfil.tecnico],
+    Perfil.coordenador => const [Perfil.professor, Perfil.tecnico],
+    Perfil.professor || Perfil.tecnico => const [],
+  };
+
+  bool get escolheResponsavel => perfisDeResponsavel.isNotEmpty;
 
   static Perfil fromJson(Object? json) =>
       enumDoJson(values, (perfil) => perfil.valorJson, json);

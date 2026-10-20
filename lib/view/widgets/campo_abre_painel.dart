@@ -12,6 +12,8 @@ class CampoAbrePainel<T> extends StatelessWidget {
   final String? dica;
   final String? Function(T?)? validador;
   final bool habilitado;
+  final bool opcional;
+  final VoidCallback? aoLimpar;
 
   const CampoAbrePainel({
     super.key,
@@ -24,6 +26,8 @@ class CampoAbrePainel<T> extends StatelessWidget {
     this.dica,
     this.validador,
     this.habilitado = true,
+    this.opcional = false,
+    this.aoLimpar,
   });
 
   @override
@@ -31,7 +35,7 @@ class CampoAbrePainel<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        rotuloDeCampo(context, rotulo),
+        rotuloDeCampo(context, rotulo, opcional: opcional),
         FormField<T>(
           initialValue: valor,
           enabled: habilitado,
@@ -47,13 +51,31 @@ class CampoAbrePainel<T> extends StatelessWidget {
                 errorText: campo.errorText,
                 enabled: habilitado,
                 prefixIcon: icone == null ? null : Icon(icone),
-                suffixIcon: const Icon(Icons.expand_more),
+                suffixIcon: _sufixo(campo),
               ),
               child: _valorEscolhido(context, campo.value),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _sufixo(FormFieldState<T> campo) {
+    final limpar = aoLimpar;
+    if (limpar == null || campo.value == null) {
+      return const Icon(Icons.expand_more);
+    }
+
+    return IconButton(
+      icon: const Icon(Icons.close),
+      tooltip: 'Limpar',
+      onPressed: habilitado
+          ? () {
+              campo.didChange(null);
+              limpar();
+            }
+          : null,
     );
   }
 

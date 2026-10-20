@@ -4,6 +4,7 @@ import 'package:reserva_if/model/reserva/horario_do_dia.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/sala/sala.dart';
 import 'package:reserva_if/model/usuario/perfil_usuario.dart';
+import 'package:reserva_if/services/services_cancelamento.dart';
 import 'package:reserva_if/services/services_predio.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/utils/datas.dart';
@@ -26,6 +27,7 @@ class AgendamentoViewModel extends ChangeNotifier
     required this._servicePredio,
     required this._serviceReserva,
     required this.reservasMudaram,
+    required this._serviceCancelamento,
   });
 
   final Predio predio;
@@ -35,6 +37,7 @@ class AgendamentoViewModel extends ChangeNotifier
   final ServicesReserva _serviceReserva;
   @override
   final ReservasMudaram reservasMudaram;
+  final ServicesCancelamento _serviceCancelamento;
 
   late final EstadoDeCarga _cargaReservas = EstadoDeCarga(
     aoMudar: notificarSeVivo,
@@ -75,6 +78,9 @@ class AgendamentoViewModel extends ChangeNotifier
 
   @override
   ServicesReserva get serviceReserva => _serviceReserva;
+
+  @override
+  ServicesCancelamento get serviceCancelamento => _serviceCancelamento;
 
   @override
   Future<void> recarregarReservas() => carregarReservas();

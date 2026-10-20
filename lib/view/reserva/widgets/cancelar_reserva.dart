@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/dialogo_justificativa.dart';
 import 'package:reserva_if/view/reserva/widgets/painel_detalhes_reserva.dart';
@@ -15,10 +16,11 @@ void abrirDetalhesDaReserva(
     context: context,
     construir: (_) => PainelDetalhesReserva(
       reserva: reserva,
-      podeCancelar: viewModel.podeCancelar(reserva),
-      aoCancelar: () => cancelarReservaComFeedback(
+      modoCancelamento: viewModel.modoDeCancelamento(reserva),
+      aoCancelar: (modo) => cancelarReservaComFeedback(
         context,
         reserva: reserva,
+        modo: modo,
         viewModel: viewModel,
       ),
     ),
@@ -28,19 +30,26 @@ void abrirDetalhesDaReserva(
 Future<void> cancelarReservaComFeedback(
   BuildContext context, {
   required Reserva reserva,
+  required ModoCancelamento modo,
   required CancelamentoDeReservaMixin viewModel,
 }) async {
-  final justificativa = await pedirJustificativaDeCancelamento(context);
+  final justificativa = await pedirJustificativaDeCancelamento(
+    context,
+    modo,
+  );
   if (justificativa == null || !context.mounted) return;
 
-  final resultado = await viewModel.cancelar(reserva, justificativa);
+  final resultado = await viewModel.cancelar(
+    reserva,
+    modo,
+    justificativa,
+  );
   if (!context.mounted) return;
 
   if (resultado == null) {
     mostrarErro(
       context,
-      viewModel.mensagemErroCancelamento ??
-          'Não foi possível cancelar a reserva.',
+      viewModel.mensagemErroCancelamento ?? modo.falhaPadrao,
     );
   } else if (resultado.solicitacaoEnviada) {
     mostrarInfo(context, resultado.mensagem);

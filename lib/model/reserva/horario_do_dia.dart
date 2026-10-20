@@ -1,6 +1,7 @@
 import '../../utils/datas.dart';
 import '../../utils/formatacao.dart';
 import 'reserva.dart';
+import 'status_reserva.dart';
 
 class HorarioDoDia {
   const HorarioDoDia({required this.inicio, required this.fim, this.reserva});
@@ -52,7 +53,9 @@ class HorarioDoDia {
   String get diaFormatado => formatarDiaDaSemanaEDiaDoMes(inicio);
 
   String situacao({DateTime? agora}) {
-    if (!livre) return 'Reservado';
+    final status = reserva?.status;
+    if (status == StatusReserva.pendente) return StatusReserva.pendente.rotulo;
+    if (status != null) return 'Reservado';
 
     return passado(agora: agora) ? 'Encerrado' : 'Livre';
   }

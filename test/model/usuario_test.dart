@@ -4,6 +4,7 @@ import 'package:reserva_if/model/usuario/coordenacao.dart';
 import 'package:reserva_if/model/usuario/perfil.dart';
 import 'package:reserva_if/model/usuario/professor.dart';
 import 'package:reserva_if/model/usuario/tecnico.dart';
+import 'package:reserva_if/model/usuario/tipo_credencial.dart';
 import 'package:reserva_if/model/usuario/usuario.dart';
 import 'package:reserva_if/model/usuario/usuario_resumo.dart';
 
@@ -94,6 +95,36 @@ void main() {
 
       expect(resumo.id, 'u1');
       expect(resumo.nome, 'Ana Souza');
+      expect(resumo.tipoCredencial, isNull);
+      expect(resumo.ehAluno, isFalse);
+    });
+
+    test('lê a credencial e reconhece o aluno', () {
+      final aluno = UsuarioResumo.fromJson({
+        'id': 'u1',
+        'nome': 'Ana Souza',
+        'tipoCredencial': 'MATRICULA_ALUNO',
+      });
+      final servidor = UsuarioResumo.fromJson({
+        'id': 'u2',
+        'nome': 'Paulo Lima',
+        'tipoCredencial': 'SIAPE_DOCENTE',
+      });
+
+      expect(aluno.tipoCredencial, TipoCredencial.matriculaAluno);
+      expect(aluno.ehAluno, isTrue);
+      expect(servidor.ehAluno, isFalse);
+    });
+
+    test('credencial desconhecida lança', () {
+      expect(
+        () => UsuarioResumo.fromJson({
+          'id': 'u1',
+          'nome': 'Ana Souza',
+          'tipoCredencial': 'VISITANTE',
+        }),
+        throwsArgumentError,
+      );
     });
 
     test('fromJsonOpcional devolve nulo para nulo e lança sem nome', () {

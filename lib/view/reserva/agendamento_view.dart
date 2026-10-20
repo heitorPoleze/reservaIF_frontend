@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/model/reserva/horario_do_dia.dart';
 import 'package:reserva_if/model/sala/sala.dart';
+import 'package:reserva_if/services/services_cancelamento.dart';
 import 'package:reserva_if/services/services_predio.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/view/reserva/nova_reserva_view.dart';
@@ -37,6 +38,7 @@ class _AgendamentoViewState extends State<AgendamentoView> {
     servicePredio: ServicesPredio(),
     serviceReserva: ServicesReserva(),
     reservasMudaram: context.read<ReservasMudaram>(),
+    serviceCancelamento: ServicesCancelamento(),
   );
 
   @override

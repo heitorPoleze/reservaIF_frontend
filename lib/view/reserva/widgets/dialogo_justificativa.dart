@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
 import 'package:reserva_if/utils/validator.dart';
 import 'package:reserva_if/view/theme/app_cores.dart';
 import 'package:reserva_if/view/widgets/campo_texto.dart';
 import 'package:reserva_if/view/widgets/dialogos.dart';
 import 'package:reserva_if/view/widgets/formulario/validacao_formulario.dart';
 
-Future<String?> pedirJustificativaDeCancelamento(BuildContext context) {
+Future<String?> pedirJustificativaDeCancelamento(
+  BuildContext context,
+  ModoCancelamento modo,
+) {
   return showDialog<String>(
     context: context,
-    builder: (_) => const _DialogoJustificativa(
-      titulo: 'Cancelar reserva?',
-      mensagem:
-          'O horário volta a ficar livre e a reserva segue no '
-          'histórico como cancelada.',
+    builder: (_) => _DialogoJustificativa(
+      titulo: modo.tituloConfirmacao,
+      mensagem: modo.explicacao,
       rotuloCampo: 'Justificativa',
-      dica: 'Por que a reserva está sendo cancelada?',
-      rotuloConfirmar: 'Cancelar reserva',
+      dica: modo.dicaJustificativa,
+      rotuloConfirmar: modo.rotuloAcao,
       corConfirmar: AppCores.aviso,
     ),
   );

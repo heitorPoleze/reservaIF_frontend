@@ -3,6 +3,7 @@ import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
 import 'package:reserva_if/model/usuario/perfil_usuario.dart';
 import 'package:reserva_if/model/usuario/perfil.dart';
+import 'package:reserva_if/services/services_cancelamento.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/utils/formatacao.dart';
 import 'package:reserva_if/viewmodel/estado_de_carga.dart';
@@ -22,12 +23,15 @@ class ReservasPerfilViewModel extends ChangeNotifier
   ReservasPerfilViewModel({
     required this.usuario,
     required this.service,
+    required this.serviceCancelamento,
     required this.reservasMudaram,
   });
 
   @override
   final PerfilUsuario usuario;
   final ServicesReserva service;
+  @override
+  final ServicesCancelamento serviceCancelamento;
   @override
   final ReservasMudaram reservasMudaram;
 

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:reserva_if/model/predio/predio.dart';
+import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/resultado_cancelamento.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
@@ -9,6 +10,7 @@ import 'package:reserva_if/model/usuario/perfil_usuario.dart';
 import 'package:reserva_if/model/usuario/tipo_credencial.dart';
 import 'package:reserva_if/model/usuario/usuario_resumo.dart';
 import 'package:reserva_if/services/http/exceptions/api_exceptions.dart';
+import 'package:reserva_if/services/services_cancelamento.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/viewmodel/reserva/reservas_mudaram.dart';
 import 'package:reserva_if/viewmodel/reserva/reservas_perfil_viewmodel.dart';
@@ -98,6 +100,7 @@ void main() {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.aluno),
       service: service,
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: ReservasMudaram(),
     );
     addTearDown(viewModel.dispose);
@@ -116,6 +119,7 @@ void main() {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.coordenador),
       service: service,
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: ReservasMudaram(),
     );
     addTearDown(viewModel.dispose);
@@ -135,6 +139,7 @@ void main() {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.coordenador),
       service: service,
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: canal,
     );
     addTearDown(viewModel.dispose);
@@ -142,6 +147,7 @@ void main() {
 
     final resultado = await viewModel.cancelar(
       viewModel.solicitadas.single,
+      ModoCancelamento.cancelar,
       '  Imprevisto  ',
     );
 
@@ -157,6 +163,7 @@ void main() {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.coordenador),
       service: service,
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: ReservasMudaram(),
     );
     addTearDown(viewModel.dispose);
@@ -172,20 +179,24 @@ void main() {
     expect(service.chamadasResponsabilidade, 2);
   });
 
-  test('podeCancelar delega à regra da reserva com o usuário logado', () {
+  test('modoDeCancelamento delega à regra da reserva com o usuário logado', () {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.aluno),
       service: _ServicesReservaFalso(),
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: ReservasMudaram(),
     );
     addTearDown(viewModel.dispose);
 
-    expect(viewModel.podeCancelar(_reserva('futura')), isTrue);
     expect(
-      viewModel.podeCancelar(
+      viewModel.modoDeCancelamento(_reserva('futura')),
+      ModoCancelamento.cancelar,
+    );
+    expect(
+      viewModel.modoDeCancelamento(
         _reserva('cancelada', status: StatusReserva.cancelada),
       ),
-      isFalse,
+      isNull,
     );
   });
 
@@ -193,6 +204,7 @@ void main() {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.coordenador),
       service: _ServicesReservaFalso(),
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: ReservasMudaram(),
     );
     addTearDown(viewModel.dispose);
@@ -220,6 +232,7 @@ void main() {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.professor, uuid: 'u2'),
       service: _ServicesReservaFalso(),
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: ReservasMudaram(),
     );
     addTearDown(viewModel.dispose);
@@ -239,6 +252,7 @@ void main() {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.professor),
       service: service,
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: canal,
     );
     addTearDown(viewModel.dispose);
@@ -257,6 +271,7 @@ void main() {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.professor),
       service: service,
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: canal,
     );
     addTearDown(viewModel.dispose);
@@ -276,6 +291,7 @@ void main() {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.professor),
       service: _ServicesReservaQueRecusa(),
+      serviceCancelamento: ServicesCancelamento(),
       reservasMudaram: canal,
     );
     addTearDown(viewModel.dispose);

@@ -27,12 +27,6 @@ class NovaReservaViewModel extends ChangeNotifier
     required this._reservasMudaram,
   });
 
-  static const perfisDeResponsavel = [
-    Perfil.coordenador,
-    Perfil.professor,
-    Perfil.tecnico,
-  ];
-
   final HorarioDoDia horario;
   final Sala sala;
   final PerfilUsuario usuario;
@@ -49,6 +43,10 @@ class NovaReservaViewModel extends ChangeNotifier
   TipoRecorrencia _recorrencia = TipoRecorrencia.unica;
 
   bool get exigeResponsavel => usuario.perfil.exigeResponsavel;
+
+  bool get escolheResponsavel => usuario.perfil.escolheResponsavel;
+
+  List<Perfil> get perfisDeResponsavel => usuario.perfil.perfisDeResponsavel;
 
   List<ServidorResumo> servidoresDo(Perfil perfil) => [
     for (final servidor in _servidores)
@@ -72,7 +70,7 @@ class NovaReservaViewModel extends ChangeNotifier
   String? get mensagemErroServidores => _cargaServidores.mensagemErro;
 
   Future<void> carregarServidores() {
-    if (!exigeResponsavel || isCarregandoServidores) return Future.value();
+    if (!escolheResponsavel || isCarregandoServidores) return Future.value();
 
     return _cargaServidores.executar(
       chamada: () async =>
@@ -97,9 +95,8 @@ class NovaReservaViewModel extends ChangeNotifier
   }) {
     if (isLoading) return Future.value();
 
-    final responsavel = exigeResponsavel
-        ? _responsavel?.resumo
-        : usuario.resumo;
+    final responsavel =
+        _responsavel?.resumo ?? (exigeResponsavel ? null : usuario.resumo);
     if (responsavel == null) return Future.value();
 
     final reserva = _montarReserva(

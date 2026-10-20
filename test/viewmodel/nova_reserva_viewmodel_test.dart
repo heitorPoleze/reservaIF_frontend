@@ -250,12 +250,56 @@ void main() {
       expect(enviada.toJson()['responsavelId'], 's2');
     });
 
-    test('perfis de responsável seguem a ordem das abas', () {
-      expect(NovaReservaViewModel.perfisDeResponsavel, [
+    test('perfis de responsável seguem o perfil logado', () {
+      final aluno = _viewModel(ServicesReservaFalso(), usuario: _aluno);
+      final coordenador = _viewModel(
+        ServicesReservaFalso(),
+        usuario: _coordenadorLogado,
+      );
+
+      expect(aluno.perfisDeResponsavel, [
         Perfil.coordenador,
         Perfil.professor,
         Perfil.tecnico,
       ]);
+      expect(coordenador.perfisDeResponsavel, [
+        Perfil.professor,
+        Perfil.tecnico,
+      ]);
+    });
+
+    test('coordenador designa um professor como responsável', () async {
+      final service = ServicesReservaFalso();
+      final servicoUsuario = ServicesUsuarioFalso();
+      final viewModel = _viewModel(
+        service,
+        usuario: _coordenadorLogado,
+        serviceUsuario: servicoUsuario,
+      );
+
+      await viewModel.carregarServidores();
+      viewModel.selecionarResponsavel(_professor);
+      await viewModel.reservar(justificativa: 'Aula', observacoes: '');
+
+      final enviada = service.enviadas.single;
+      expect(viewModel.escolheResponsavel, isTrue);
+      expect(viewModel.exigeResponsavel, isFalse);
+      expect(servicoUsuario.buscas, 1);
+      expect(enviada.solicitante.id, 'c1');
+      expect(enviada.toJson()['responsavelId'], 's1');
+    });
+
+    test('coordenador sem escolha fica como o próprio responsável', () async {
+      final service = ServicesReservaFalso();
+      final viewModel = _viewModel(service, usuario: _coordenadorLogado);
+
+      await viewModel.carregarServidores();
+      viewModel
+        ..selecionarResponsavel(_tecnico)
+        ..selecionarResponsavel(null);
+      await viewModel.reservar(justificativa: 'Aula', observacoes: '');
+
+      expect(service.enviadas.single.toJson()['responsavelId'], 'c1');
     });
 
     test('aluno sem responsável não chama o service', () async {
