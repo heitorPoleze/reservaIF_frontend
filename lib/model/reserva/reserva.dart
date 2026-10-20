@@ -150,6 +150,11 @@ class Reserva {
       (agora ?? DateTime.now()).isBefore(inicio) &&
       (usuario.podeAprovar || solicitante.id == usuario.uuid);
 
+  bool analisavelPor(PerfilUsuario usuario) =>
+      status == StatusReserva.pendente &&
+      delegada &&
+      responsavel.id == usuario.uuid;
+
   bool conflitaCom(Reserva outra) =>
       sala.id == outra.sala.id &&
       status.ocupaSala &&

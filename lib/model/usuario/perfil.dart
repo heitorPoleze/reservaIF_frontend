@@ -37,6 +37,8 @@ enum Perfil {
 
   bool get exigeResponsavel => this == Perfil.aluno;
 
+  bool get criaRecorrencia => this == Perfil.coordenador;
+
   static Perfil fromJson(Object? json) =>
       enumDoJson(values, (perfil) => perfil.valorJson, json);
 

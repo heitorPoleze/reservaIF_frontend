@@ -73,6 +73,16 @@ void main() {
       }
     });
 
+    test('só o coordenador cria recorrência', () {
+      expect(
+        [
+          for (final perfil in Perfil.values)
+            if (perfil.criaRecorrencia) perfil,
+        ],
+        [Perfil.coordenador],
+      );
+    });
+
     test('nivelAcesso desconhecido ou em texto falha alto', () {
       expect(() => Perfil.fromNivelAcesso(4), throwsArgumentError);
       expect(() => Perfil.fromNivelAcesso('2'), throwsArgumentError);
@@ -85,17 +95,15 @@ void main() {
     });
 
     test('só aluno não acompanha pendências', () {
-      expect(
-        Perfil.values.where((perfil) => !perfil.acompanhaPendencias),
-        [Perfil.aluno],
-      );
+      expect(Perfil.values.where((perfil) => !perfil.acompanhaPendencias), [
+        Perfil.aluno,
+      ]);
     });
 
     test('só aluno exige responsável na reserva', () {
-      expect(
-        Perfil.values.where((perfil) => perfil.exigeResponsavel),
-        [Perfil.aluno],
-      );
+      expect(Perfil.values.where((perfil) => perfil.exigeResponsavel), [
+        Perfil.aluno,
+      ]);
     });
   });
 
@@ -113,10 +121,7 @@ void main() {
     });
 
     test('falham alto em valor desconhecido', () {
-      expect(
-        () => TipoRecorrencia.fromJson('QUINZENAL'),
-        throwsArgumentError,
-      );
+      expect(() => TipoRecorrencia.fromJson('QUINZENAL'), throwsArgumentError);
       expect(() => DiaSemana.fromJson('SEGUNDA_FEIRA'), throwsArgumentError);
     });
 
@@ -125,6 +130,24 @@ void main() {
       expect(TipoRecorrencia.mensal.exigeDataFim, isFalse);
       expect(TipoRecorrencia.anual.exigeDataFim, isFalse);
     });
+
+    test('dispensamDatas deixa semanal de fora', () {
+      expect(
+        TipoRecorrencia.dispensamDatas,
+        isNot(contains(TipoRecorrencia.semanal)),
+      );
+      expect(TipoRecorrencia.dispensamDatas, hasLength(4));
+    });
+
+    test(
+      'descricao das séries sem data repete semanalmente pelo horizonte',
+      () {
+        expect(TipoRecorrencia.mensal.descricao, contains('1 vez por semana'));
+        expect(TipoRecorrencia.mensal.descricao, endsWith('por 1 mês.'));
+        expect(TipoRecorrencia.semestral.descricao, endsWith('por 6 meses.'));
+        expect(TipoRecorrencia.anual.descricao, endsWith('por 12 meses.'));
+      },
+    );
 
     test('DiaSemana.de mapeia o weekday do Dart', () {
       expect(DiaSemana.de(DateTime(2026, 10, 19)), DiaSemana.segunda);

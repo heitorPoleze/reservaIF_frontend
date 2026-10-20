@@ -26,7 +26,7 @@ class PainelDetalhesReserva extends StatelessWidget {
         children: [
           CartaoEntidade(
             icone: Icons.event_note,
-            titulo: reserva.finalidade,
+            titulo: reserva.periodoFormatado,
             acao: SeloStatusReserva(status: reserva.status),
             corpo: _linhas(),
           ),
@@ -48,6 +48,7 @@ class PainelDetalhesReserva extends StatelessWidget {
   }
 
   List<Widget> _linhas() {
+    final finalidade = reserva.finalidade.trim();
     final observacoes = reserva.observacoes;
     final criadoEm = reserva.criadoEmFormatado;
     final aceitoEm = reserva.aceitoPeloResponsavelEmFormatado;
@@ -59,14 +60,15 @@ class PainelDetalhesReserva extends StatelessWidget {
     return [
       LinhaCartao(
         icone: Icons.calendar_today_outlined,
-        titulo: 'Data',
-        valor: reserva.dataComDiaDaSemana,
+        titulo: 'Dia da semana',
+        valor: reserva.diaDaSemana,
       ),
-      LinhaCartao(
-        icone: Icons.schedule,
-        titulo: 'Horário',
-        valor: reserva.horarioFormatado,
-      ),
+      if (finalidade.isNotEmpty)
+        LinhaCartao(
+          icone: Icons.subject,
+          titulo: 'Finalidade',
+          valor: finalidade,
+        ),
       LinhaCartao(
         icone: Icons.meeting_room_outlined,
         titulo: 'Sala',

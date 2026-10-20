@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reserva_if/model/reserva/horario_do_dia.dart';
+import 'package:reserva_if/model/reserva/tipo_recorrencia.dart';
 import 'package:reserva_if/model/sala/sala.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/services/services_usuario.dart';
 import 'package:reserva_if/utils/validator.dart';
+import 'package:reserva_if/view/reserva/widgets/explicacao_recorrencia.dart';
 import 'package:reserva_if/view/reserva/widgets/painel_selecao_responsavel.dart';
 import 'package:reserva_if/view/theme/app_estilos.dart';
 import 'package:reserva_if/view/widgets/app_bar_padrao.dart';
 import 'package:reserva_if/view/widgets/botao_padrao.dart';
 import 'package:reserva_if/view/widgets/campo_abre_painel.dart';
+import 'package:reserva_if/view/widgets/campo_selecao.dart';
 import 'package:reserva_if/view/widgets/campo_texto.dart';
 import 'package:reserva_if/view/widgets/cartao_entidade.dart';
 import 'package:reserva_if/view/widgets/dialogos.dart';
 import 'package:reserva_if/view/widgets/estados.dart';
 import 'package:reserva_if/view/widgets/feedback_usuario.dart';
 import 'package:reserva_if/view/widgets/formulario/validacao_formulario.dart';
+import 'package:reserva_if/viewmodel/reserva/reservas_mudaram.dart';
 import 'package:reserva_if/viewmodel/reserva/nova_reserva_viewmodel.dart';
 import 'package:reserva_if/viewmodel/sessao/sessao_viewmodel.dart';
 
@@ -40,10 +44,12 @@ class _NovaReservaViewState extends State<NovaReservaView> {
     usuario: context.read<SessaoViewModel>().usuario!,
     service: ServicesReserva(),
     serviceUsuario: ServicesUsuario(),
+    reservasMudaram: context.read<ReservasMudaram>(),
   );
 
   bool get _temDadosPreenchidos =>
       _viewModel.responsavel != null ||
+      _viewModel.recorrente ||
       _justificativaController.text.trim().isNotEmpty ||
       _observacoesController.text.trim().isNotEmpty;
 
@@ -120,6 +126,20 @@ class _NovaReservaViewState extends State<NovaReservaView> {
                 const SizedBox(height: 24),
                 if (_viewModel.exigeResponsavel) ...[
                   _CampoResponsavel(viewModel: _viewModel),
+                  const SizedBox(height: AppEstilos.espacoEntreCampos),
+                ],
+                if (_viewModel.podeEscolherRecorrencia) ...[
+                  CampoSelecao<TipoRecorrencia>(
+                    rotulo: 'Recorrência',
+                    valor: _viewModel.recorrencia,
+                    opcoes: _viewModel.tiposDeRecorrencia,
+                    rotuloDe: (tipo) => tipo.rotulo,
+                    habilitado: !_viewModel.isLoading,
+                    aoMudar: _viewModel.selecionarRecorrencia,
+                  ),
+                  BotaoExplicarRecorrencias(
+                    tipos: _viewModel.tiposDeRecorrencia,
+                  ),
                   const SizedBox(height: AppEstilos.espacoEntreCampos),
                 ],
                 CampoTexto(

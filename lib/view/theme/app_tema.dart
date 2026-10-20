@@ -399,6 +399,8 @@ abstract final class AppTema {
     collapsedTextColor: AppCores.textoPrimario,
     backgroundColor: Colors.transparent,
     collapsedBackgroundColor: Colors.transparent,
+    shape: Border(),
+    collapsedShape: Border(),
   );
 
   static Color _tintaDeDia(Set<WidgetState> estados) {

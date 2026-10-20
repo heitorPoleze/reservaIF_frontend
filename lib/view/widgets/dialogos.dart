@@ -54,6 +54,33 @@ Future<bool> confirmarDescarte(
   );
 }
 
+Future<void> informarEmDialogo(
+  BuildContext context, {
+  required String titulo,
+  required Widget conteudo,
+  String rotuloFechar = 'Entendi',
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(titulo),
+      content: SingleChildScrollView(child: conteudo),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            rotuloFechar,
+            style: const TextStyle(
+              color: AppCores.acao,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 List<Widget> acoesDeDialogo({
   required BuildContext context,
   required String rotuloConfirmar,

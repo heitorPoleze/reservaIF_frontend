@@ -1,5 +1,5 @@
-para o aluno, a tela de inputs de justificativa deve aparecer selecionar responsável, que retorna 
-
-implemente os títulos em cima de cada tela (Prédios, Agendamentos)
-
-deixe a fonte dos títulos do app bar maior
+para as pendências do coordenador, também devem aparecer os cards presentes em GET
+/cancelamentos/solicitacoes Listar solicitações de cancelamento pendentes, que devem ser resolvidas de acordo com as telas em assets\images\prints_figma\pendencias_coordenador e assets\images\prints_figma\resolver_conflito_coordenador)
+(POST
+/cancelamentos/solicitacoes/{id}/aprovar e POST
+/cancelamentos/solicitacoes/{id}/rejeitar)

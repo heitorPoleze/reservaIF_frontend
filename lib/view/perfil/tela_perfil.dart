@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
+import 'package:reserva_if/model/reserva/status_reserva.dart';
 import 'package:reserva_if/model/usuario/perfil_usuario.dart';
 import 'package:reserva_if/services/services_reserva.dart';
-import 'package:reserva_if/view/reserva/widgets/painel_detalhes_reserva.dart';
+import 'package:reserva_if/view/reserva/widgets/abas_por_status.dart';
+import 'package:reserva_if/view/reserva/widgets/acoes_de_analise.dart';
+import 'package:reserva_if/view/reserva/widgets/analisar_reserva.dart';
+import 'package:reserva_if/view/reserva/widgets/cancelar_reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/selo_status_reserva.dart';
 import 'package:reserva_if/view/theme/app_cores.dart';
 import 'package:reserva_if/view/theme/app_estilos.dart';
@@ -12,7 +16,7 @@ import 'package:reserva_if/view/widgets/botao_padrao.dart';
 import 'package:reserva_if/view/widgets/cartao_entidade.dart';
 import 'package:reserva_if/view/widgets/dialogos.dart';
 import 'package:reserva_if/view/widgets/estados.dart';
-import 'package:reserva_if/view/widgets/painel_modal.dart';
+import 'package:reserva_if/viewmodel/reserva/reservas_mudaram.dart';
 import 'package:reserva_if/viewmodel/reserva/reservas_perfil_viewmodel.dart';
 import 'package:reserva_if/viewmodel/sessao/sessao_viewmodel.dart';
 
@@ -39,6 +43,7 @@ class _TelaPerfilState extends State<TelaPerfil> {
     _viewModel = ReservasPerfilViewModel(
       usuario: usuario,
       service: ServicesReserva(),
+      reservasMudaram: context.read<ReservasMudaram>(),
     )..carregar();
   }
 
@@ -68,10 +73,15 @@ class _TelaPerfilState extends State<TelaPerfil> {
       (sessao) => sessao.usuario,
     );
     final viewModel = _viewModel;
+    final geracao = context.watch<ReservasMudaram>().geracao;
 
     if (usuario == null || viewModel == null) {
       return const SizedBox.shrink();
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) viewModel.sincronizarCom(geracao);
+    });
 
     return Scaffold(
       appBar: const AppBarPadrao(titulo: 'Perfil'),
@@ -85,38 +95,27 @@ class _TelaPerfilState extends State<TelaPerfil> {
             children: [
               _CartaoDoUsuario(usuario: usuario),
               const SizedBox(height: 28),
-              Text(
-                'Meus agendamentos',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              if (viewModel.podeVerResponsabilidades) ...[
-                SegmentedButton<_AbaReservas>(
-                  segments: [
-                    ButtonSegment(
-                      value: _AbaReservas.solicitadas,
-                      label: Text(
-                        'Solicitados (${viewModel.solicitadas.length})',
-                      ),
-                    ),
-                    ButtonSegment(
-                      value: _AbaReservas.responsavel,
-                      label: Text(
-                        'Sob responsabilidade '
-                        '(${viewModel.sobMinhaResponsabilidade.length})',
-                      ),
-                    ),
-                  ],
-                  selected: {_abaSelecionada},
-                  onSelectionChanged: (selecionadas) =>
-                      setState(() => _abaSelecionada = selecionadas.first),
-                ),
-                const SizedBox(height: 16),
-              ],
-              _ListaDeReservas(
+              _SecaoMeusAgendamentos(
                 viewModel: viewModel,
-                mostrarResponsabilidade:
-                    _abaSelecionada == _AbaReservas.responsavel,
+                abaSelecionada: _abaSelecionada,
+                aoTrocarAba: (aba) => setState(() => _abaSelecionada = aba),
+                intencoes: _IntencoesDeReserva(
+                  aoTocar: (reserva) => abrirDetalhesDaReserva(
+                    context,
+                    reserva: reserva,
+                    viewModel: viewModel,
+                  ),
+                  aoAprovar: (reserva) => aprovarReservaComFeedback(
+                    context,
+                    reserva: reserva,
+                    viewModel: viewModel,
+                  ),
+                  aoRejeitar: (reserva) => rejeitarReservaComFeedback(
+                    context,
+                    reserva: reserva,
+                    viewModel: viewModel,
+                  ),
+                ),
               ),
               const SizedBox(height: 28),
               BotaoPadrao(
@@ -133,13 +132,91 @@ class _TelaPerfilState extends State<TelaPerfil> {
   }
 }
 
+class _IntencoesDeReserva {
+  final ValueChanged<Reserva> aoTocar;
+  final ValueChanged<Reserva> aoAprovar;
+  final ValueChanged<Reserva> aoRejeitar;
+
+  const _IntencoesDeReserva({
+    required this.aoTocar,
+    required this.aoAprovar,
+    required this.aoRejeitar,
+  });
+}
+
+class _SecaoMeusAgendamentos extends StatelessWidget {
+  final ReservasPerfilViewModel viewModel;
+  final _AbaReservas abaSelecionada;
+  final ValueChanged<_AbaReservas> aoTrocarAba;
+  final _IntencoesDeReserva intencoes;
+
+  const _SecaoMeusAgendamentos({
+    required this.viewModel,
+    required this.abaSelecionada,
+    required this.aoTrocarAba,
+    required this.intencoes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = Theme.of(context).textTheme;
+
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: const EdgeInsets.only(top: 4),
+      expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+      title: Text('Meus agendamentos', style: textos.titleLarge),
+      subtitle: Text(
+        viewModel.rotuloDeSolicitados,
+        style: textos.bodySmall?.copyWith(color: AppCores.textoSecundario),
+      ),
+      trailing: viewModel.isAtualizandoReserva
+          ? const SizedBox.square(
+              dimension: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : null,
+      children: [
+        if (viewModel.podeVerResponsabilidades) ...[
+          SegmentedButton<_AbaReservas>(
+            segments: [
+              ButtonSegment(
+                value: _AbaReservas.solicitadas,
+                label: Text('Solicitados (${viewModel.solicitadas.length})'),
+              ),
+              ButtonSegment(
+                value: _AbaReservas.responsavel,
+                label: Text(
+                  'Sob responsabilidade '
+                  '(${viewModel.sobMinhaResponsabilidade.length})',
+                ),
+              ),
+            ],
+            selected: {abaSelecionada},
+            onSelectionChanged: (selecionadas) =>
+                aoTrocarAba(selecionadas.first),
+          ),
+          const SizedBox(height: 16),
+        ],
+        _ListaDeReservas(
+          viewModel: viewModel,
+          mostrarResponsabilidade: abaSelecionada == _AbaReservas.responsavel,
+          intencoes: intencoes,
+        ),
+      ],
+    );
+  }
+}
+
 class _ListaDeReservas extends StatelessWidget {
   final ReservasPerfilViewModel viewModel;
   final bool mostrarResponsabilidade;
+  final _IntencoesDeReserva intencoes;
 
   const _ListaDeReservas({
     required this.viewModel,
     required this.mostrarResponsabilidade,
+    required this.intencoes,
   });
 
   @override
@@ -172,12 +249,64 @@ class _ListaDeReservas extends StatelessWidget {
       );
     }
 
+    return AbasPorStatus(
+      contagemDe: (status) => _reservasCom(status).length,
+      construirColuna: (status) => _ColunaDeStatus(
+        status: status,
+        reservas: _reservasCom(status),
+        mostrarSolicitante: mostrarResponsabilidade,
+        viewModel: viewModel,
+        intencoes: intencoes,
+      ),
+    );
+  }
+
+  List<Reserva> _reservasCom(StatusReserva status) => mostrarResponsabilidade
+      ? viewModel.sobMinhaResponsabilidadeCom(status)
+      : viewModel.solicitadasCom(status);
+}
+
+class _ColunaDeStatus extends StatelessWidget {
+  final StatusReserva status;
+  final List<Reserva> reservas;
+  final bool mostrarSolicitante;
+  final ReservasPerfilViewModel viewModel;
+  final _IntencoesDeReserva intencoes;
+
+  const _ColunaDeStatus({
+    required this.status,
+    required this.reservas,
+    required this.mostrarSolicitante,
+    required this.viewModel,
+    required this.intencoes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (reservas.isEmpty) {
+      return EstadoVazio(
+        mensagem: 'Nenhum agendamento com status "${status.rotulo}".',
+        icone: Icons.event_busy_outlined,
+      );
+    }
+
     return Column(
       children: [
         for (final reserva in reservas) ...[
           _CartaoDeReserva(
             reserva: reserva,
-            mostrarSolicitante: mostrarResponsabilidade,
+            mostrarSolicitante: mostrarSolicitante,
+            aoTocar: () => intencoes.aoTocar(reserva),
+            acoesDeAnalise: viewModel.podeAnalisar(reserva)
+                ? AcoesDeAnalise(
+                    aoAprovar: viewModel.isAnalisando
+                        ? null
+                        : () => intencoes.aoAprovar(reserva),
+                    aoRejeitar: viewModel.isAnalisando
+                        ? null
+                        : () => intencoes.aoRejeitar(reserva),
+                  )
+                : null,
           ),
           const SizedBox(height: 12),
         ],
@@ -189,32 +318,32 @@ class _ListaDeReservas extends StatelessWidget {
 class _CartaoDeReserva extends StatelessWidget {
   final Reserva reserva;
   final bool mostrarSolicitante;
+  final VoidCallback aoTocar;
+  final Widget? acoesDeAnalise;
 
   const _CartaoDeReserva({
     required this.reserva,
     required this.mostrarSolicitante,
+    required this.aoTocar,
+    this.acoesDeAnalise,
   });
 
   @override
   Widget build(BuildContext context) {
+    final finalidade = reserva.finalidade.trim();
+
     return CartaoEntidade(
       icone: Icons.event_note_outlined,
-      titulo: reserva.finalidade,
-      acao: SeloStatusReserva(status: reserva.status),
-      aoTocar: () => mostrarPainelModal<void>(
-        context: context,
-        construir: (_) => PainelDetalhesReserva(
-          reserva: reserva,
-          podeCancelar: false,
-          aoCancelar: () {},
-        ),
-      ),
+      titulo: reserva.periodoFormatado,
+      acao: acoesDeAnalise ?? SeloStatusReserva(status: reserva.status),
+      aoTocar: aoTocar,
       corpo: [
-        LinhaCartao(
-          icone: Icons.calendar_today_outlined,
-          titulo: 'Data e horário',
-          valor: reserva.periodoFormatado,
-        ),
+        if (finalidade.isNotEmpty)
+          LinhaCartao(
+            icone: Icons.subject,
+            titulo: 'Finalidade',
+            valor: finalidade,
+          ),
         LinhaCartao(
           icone: Icons.meeting_room_outlined,
           titulo: 'Sala',

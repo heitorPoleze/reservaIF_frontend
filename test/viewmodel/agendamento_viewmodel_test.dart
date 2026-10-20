@@ -16,6 +16,7 @@ import 'package:reserva_if/services/services_predio.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/utils/datas.dart';
 import 'package:reserva_if/viewmodel/reserva/agendamento_viewmodel.dart';
+import 'package:reserva_if/viewmodel/reserva/reservas_mudaram.dart';
 
 const _predio = Predio(id: 'p1', nome: 'Prédio TI');
 
@@ -94,11 +95,13 @@ class ServicesReservaFalso extends ServicesReserva {
 AgendamentoViewModel _viewModel({
   ServicesPredio? servicePredio,
   ServicesReserva? serviceReserva,
+  ReservasMudaram? reservasMudaram,
 }) => AgendamentoViewModel(
   predio: _predio,
   usuario: _usuario,
   servicePredio: servicePredio ?? ServicesPredioFalso(),
   serviceReserva: serviceReserva ?? ServicesReservaFalso(),
+  reservasMudaram: reservasMudaram ?? ReservasMudaram(),
 );
 
 void main() {
@@ -177,9 +180,13 @@ void main() {
     expect(viewModel.isCarregandoReservas, isFalse);
   });
 
-  test('cancelar envia a justificativa limpa e recarrega a sala', () async {
+  test('cancelar envia a justificativa limpa e invalida o canal', () async {
     final service = ServicesReservaFalso();
-    final viewModel = _viewModel(serviceReserva: service);
+    final canal = ReservasMudaram();
+    final viewModel = _viewModel(
+      serviceReserva: service,
+      reservasMudaram: canal,
+    );
     viewModel.selecionarSala(_labA);
     await viewModel.carregarReservas();
     final buscasAntes = service.buscas;
@@ -191,8 +198,25 @@ void main() {
 
     expect(resultado!.mensagem, 'Reserva cancelada com sucesso.');
     expect(service.cancelamentos, ['r-sA|Imprevisto']);
-    expect(service.buscas, buscasAntes + 1);
+    expect(canal.geracao, 1);
+    expect(service.buscas, buscasAntes);
     expect(viewModel.isCancelando, isFalse);
+  });
+
+  test('sincronizarCom recarrega a sala só quando a geração muda', () async {
+    final service = ServicesReservaFalso();
+    final viewModel = _viewModel(serviceReserva: service);
+    viewModel.selecionarSala(_labA);
+    await viewModel.carregarReservas();
+    final buscasAntes = service.buscas;
+
+    viewModel.sincronizarCom(0);
+    viewModel.sincronizarCom(0);
+    expect(service.buscas, buscasAntes);
+
+    viewModel.sincronizarCom(1);
+    await Future<void>.delayed(Duration.zero);
+    expect(service.buscas, buscasAntes + 1);
   });
 
   test('podeCancelar delega à regra da reserva com o usuário logado', () {

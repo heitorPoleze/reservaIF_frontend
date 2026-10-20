@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:reserva_if/view/pendencias/tela_pendencias.dart';
 import 'package:reserva_if/view/perfil/tela_perfil.dart';
 import 'package:reserva_if/view/predio/lista_predios_view.dart';
 import 'package:reserva_if/view/principal/widgets/rodape_navegacao.dart';
-import 'package:reserva_if/view/widgets/app_bar_padrao.dart';
-import 'package:reserva_if/view/widgets/estados.dart';
 import 'package:reserva_if/viewmodel/sessao/sessao_viewmodel.dart';
 
 class TelaPrincipal extends StatefulWidget {
@@ -26,11 +25,7 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
     rotulo: 'Pendências',
     icone: Icons.inventory_2_outlined,
     iconeSelecionado: Icons.inventory_2,
-    pagina: _DestinoIndisponivel(
-      titulo: 'Pendências',
-      mensagem: 'A tela de pendências ainda não está disponível.',
-      icone: Icons.inventory_2_outlined,
-    ),
+    pagina: TelaPendencias(),
   );
 
   static const _perfil = AbaPrincipal(
@@ -66,26 +61,6 @@ class _TelaPrincipalState extends State<TelaPrincipal> {
         indiceSelecionado: indice,
         aoSelecionar: (novo) => setState(() => _indiceSelecionado = novo),
       ),
-    );
-  }
-}
-
-class _DestinoIndisponivel extends StatelessWidget {
-  final String titulo;
-  final String mensagem;
-  final IconData icone;
-
-  const _DestinoIndisponivel({
-    required this.titulo,
-    required this.mensagem,
-    required this.icone,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarPadrao(titulo: titulo),
-      body: EstadoVazio(mensagem: mensagem, icone: icone),
     );
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/model/reserva/horario_do_dia.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
-import 'package:reserva_if/model/reserva/resultado_cancelamento.dart';
 import 'package:reserva_if/model/sala/sala.dart';
 import 'package:reserva_if/model/usuario/perfil_usuario.dart';
 import 'package:reserva_if/services/services_predio.dart';
@@ -11,26 +10,33 @@ import 'package:reserva_if/utils/datas.dart';
 import 'package:reserva_if/utils/formatacao.dart';
 import 'package:reserva_if/viewmodel/estado_de_carga.dart';
 import 'package:reserva_if/viewmodel/notifica_se_vivo_mixin.dart';
+import 'package:reserva_if/viewmodel/reserva/cancelamento_de_reserva_mixin.dart';
+import 'package:reserva_if/viewmodel/reserva/reservas_mudaram.dart';
+import 'package:reserva_if/viewmodel/reserva/sincroniza_reservas_mixin.dart';
 
 class AgendamentoViewModel extends ChangeNotifier
-    with NotificaSeVivoMixin, EstadoDeCarregamentoMixin {
+    with
+        NotificaSeVivoMixin,
+        EstadoDeCarregamentoMixin,
+        CancelamentoDeReservaMixin,
+        SincronizaReservasMixin {
   AgendamentoViewModel({
     required this.predio,
     required this.usuario,
     required this._servicePredio,
     required this._serviceReserva,
+    required this.reservasMudaram,
   });
 
   final Predio predio;
+  @override
   final PerfilUsuario usuario;
   final ServicesPredio _servicePredio;
   final ServicesReserva _serviceReserva;
+  @override
+  final ReservasMudaram reservasMudaram;
 
   late final EstadoDeCarga _cargaReservas = EstadoDeCarga(
-    aoMudar: notificarSeVivo,
-  );
-
-  late final EstadoDeCarga _cargaCancelamento = EstadoDeCarga(
     aoMudar: notificarSeVivo,
   );
 
@@ -51,10 +57,6 @@ class AgendamentoViewModel extends ChangeNotifier
 
   String? get mensagemErroReservas => _cargaReservas.mensagemErro;
 
-  bool get isCancelando => _cargaCancelamento.isLoading;
-
-  String? get mensagemErroCancelamento => _cargaCancelamento.mensagemErro;
-
   Set<DateTime> get diasComReserva => {
     for (final reserva in _reservas)
       if (!reserva.status.terminal) apenasData(reserva.inicio),
@@ -71,7 +73,11 @@ class AgendamentoViewModel extends ChangeNotifier
   String get rotuloDoDiaSelecionado =>
       formatarDiaDaSemanaEDiaDoMes(_diaSelecionado);
 
-  bool podeCancelar(Reserva reserva) => reserva.cancelavelPor(usuario);
+  @override
+  ServicesReserva get serviceReserva => _serviceReserva;
+
+  @override
+  Future<void> recarregarReservas() => carregarReservas();
 
   Future<void> carregarSalas() {
     if (isLoading) return Future.value();
@@ -113,25 +119,6 @@ class AgendamentoViewModel extends ChangeNotifier
       },
       aoFalhar: () {},
       aindaVale: aindaEhASala,
-    );
-  }
-
-  Future<ResultadoCancelamento?> cancelar(
-    Reserva reserva,
-    String justificativa,
-  ) {
-    if (isCancelando) return Future.value();
-
-    return _cargaCancelamento.executar(
-      chamada: () async {
-        final resultado = await _serviceReserva.cancelar(
-          reserva.id!,
-          justificativa.trim(),
-        );
-        await carregarReservas();
-        return resultado;
-      },
-      aoFalhar: () => null,
     );
   }
 }

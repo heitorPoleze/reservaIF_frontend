@@ -32,7 +32,7 @@ class ServicesReserva extends BaseService {
 
   Future<List<Reserva>> buscarSobMinhaResponsabilidade() {
     return executarRequisicao(
-      requisicao: RequisicaoHttp.get(rota('responsavel')),
+      requisicao: RequisicaoHttp.get(rota('sob-minha-responsabilidade')),
       aoSucesso: (resposta) =>
           extrairLista(resposta.bodyBytes, Reserva.fromJson),
       aoListaVazia: () => const <Reserva>[],
@@ -64,6 +64,29 @@ class ServicesReserva extends BaseService {
           extrairObjeto(resposta.bodyBytes, ResultadoCancelamento.fromJson),
       erroMsg: 'Não foi possível cancelar a reserva.',
       acao: 'cancelar a reserva',
+    );
+  }
+
+  Future<Reserva> aprovar(String idReserva) {
+    return executarRequisicao(
+      requisicao: RequisicaoHttp.patch(rota('$idReserva/aprovar')),
+      aoSucesso: (resposta) =>
+          extrairObjeto(resposta.bodyBytes, Reserva.fromJson),
+      erroMsg: 'Não foi possível aprovar a reserva.',
+      acao: 'aprovar a reserva',
+    );
+  }
+
+  Future<Reserva> rejeitar(String idReserva, String motivo) {
+    return executarRequisicao(
+      requisicao: RequisicaoHttp.patch(
+        rota('$idReserva/rejeitar'),
+        corpo: {'motivo': motivo},
+      ),
+      aoSucesso: (resposta) =>
+          extrairObjeto(resposta.bodyBytes, Reserva.fromJson),
+      erroMsg: 'Não foi possível rejeitar a reserva.',
+      acao: 'rejeitar a reserva',
     );
   }
 }

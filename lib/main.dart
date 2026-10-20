@@ -13,6 +13,7 @@ import 'package:reserva_if/services/sessao/repositorio_de_sessao.dart';
 import 'package:reserva_if/view/sessao/raiz_do_app.dart';
 import 'package:reserva_if/view/theme/app_tema.dart';
 import 'package:reserva_if/view/widgets/tela_sem_conexao.dart';
+import 'package:reserva_if/viewmodel/reserva/reservas_mudaram.dart';
 import 'package:reserva_if/viewmodel/sessao/sessao_viewmodel.dart';
 import 'package:reserva_if/viewmodel/status_de_conexao.dart';
 
@@ -44,6 +45,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider<StatusDeConexao>.value(value: statusDeConexao),
         ChangeNotifierProvider<SessaoViewModel>.value(value: sessao),
+        ChangeNotifierProvider<ReservasMudaram>(
+          create: (_) => ReservasMudaram(),
+        ),
       ],
       child: const ReservaIfApp(),
     ),

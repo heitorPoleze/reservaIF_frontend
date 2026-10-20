@@ -92,53 +92,54 @@ Reserva _reserva({
   StatusReserva status = StatusReserva.aprovada,
   String? observacoes,
   DateTime? aceitoPeloResponsavelEm,
-}) =>
-    Reserva(
-      id: id,
-      sala: sala,
-      solicitante: _aluna,
-      responsavel: responsavel,
-      inicio: inicio ?? _inicioUtc.toLocal(),
-      fim: fim ?? _fimUtc.toLocal(),
-      finalidade: 'Aula de Flutter',
-      observacoes: observacoes,
-      status: status,
-      aceitoPeloResponsavelEm: aceitoPeloResponsavelEm,
-    );
+}) => Reserva(
+  id: id,
+  sala: sala,
+  solicitante: _aluna,
+  responsavel: responsavel,
+  inicio: inicio ?? _inicioUtc.toLocal(),
+  fim: fim ?? _fimUtc.toLocal(),
+  finalidade: 'Aula de Flutter',
+  observacoes: observacoes,
+  status: status,
+  aceitoPeloResponsavelEm: aceitoPeloResponsavelEm,
+);
 
 PerfilUsuario _usuario(String uuid, Perfil perfil) => PerfilUsuario(
-      uuid: uuid,
-      nome: 'Usuário $uuid',
-      email: '$uuid@ifes.edu.br',
-      perfil: perfil,
-      tipoCredencial: TipoCredencial.siapeDocente,
-      identificador: '1234567',
-      ativo: true,
-    );
+  uuid: uuid,
+  nome: 'Usuário $uuid',
+  email: '$uuid@ifes.edu.br',
+  perfil: perfil,
+  tipoCredencial: TipoCredencial.siapeDocente,
+  identificador: '1234567',
+  ativo: true,
+);
 
 void main() {
   setUpAll(() => initializeDateFormatting('pt_BR'));
 
   group('serialização', () {
-    test('toJson manda só o payload de criação, com ids tirados dos objetos',
-        () {
-      final json = _reserva(id: 'r1').toJson();
+    test(
+      'toJson manda só o payload de criação, com ids tirados dos objetos',
+      () {
+        final json = _reserva(id: 'r1').toJson();
 
-      expect(json['salaId'], 's1');
-      expect(json['responsavelId'], 'u1');
-      expect(json['dataHoraInicio'], '2026-10-19T17:00:00.000Z');
-      expect(json['dataHoraFim'], '2026-10-19T19:00:00.000Z');
-      expect(
-        json.keys,
-        unorderedEquals([
-          'salaId',
-          'responsavelId',
-          'dataHoraInicio',
-          'dataHoraFim',
-          'finalidade',
-        ]),
-      );
-    });
+        expect(json['salaId'], 's1');
+        expect(json['responsavelId'], 'u1');
+        expect(json['dataHoraInicio'], '2026-10-19T17:00:00.000Z');
+        expect(json['dataHoraFim'], '2026-10-19T19:00:00.000Z');
+        expect(
+          json.keys,
+          unorderedEquals([
+            'salaId',
+            'responsavelId',
+            'dataHoraInicio',
+            'dataHoraFim',
+            'finalidade',
+          ]),
+        );
+      },
+    );
 
     test('toJson inclui observacoes só quando informadas', () {
       expect(_reserva().toJson().containsKey('observacoes'), isFalse);
@@ -214,7 +215,6 @@ void main() {
       expect(lida.motivoRejeicao, 'Sala em manutenção');
       expect(lida.recorrente, isTrue);
       expect(lida.serieRecorrencia!.id, 'sr1');
-      expect(lida.serieRecorrencia!.criadoPorId, 'c1');
     });
 
     test('ida e volta preserva o período', () {
@@ -254,7 +254,9 @@ void main() {
 
     test('sala sem id lança', () {
       expect(
-        () => _reserva(sala: const Sala(nome: 'Nova', predio: _predio)),
+        () => _reserva(
+          sala: const Sala(nome: 'Nova', predio: _predio),
+        ),
         throwsArgumentError,
       );
     });
@@ -278,31 +280,35 @@ void main() {
       expect(_reserva(responsavel: _professor).delegada, isTrue);
     });
 
-    test('aguardandoAceiteDoResponsavel só em análise, delegada e sem aceite',
-        () {
-      final delegada = _reserva(
-        responsavel: _professor,
-        status: StatusReserva.pendente,
-      );
+    test(
+      'aguardandoAceiteDoResponsavel só em análise, delegada e sem aceite',
+      () {
+        final delegada = _reserva(
+          responsavel: _professor,
+          status: StatusReserva.pendente,
+        );
 
-      expect(delegada.aguardandoAceiteDoResponsavel, isTrue);
-      expect(
-        delegada
-            .copyWith(aceitoPeloResponsavelEm: DateTime.now())
-            .aguardandoAceiteDoResponsavel,
-        isFalse,
-      );
-      expect(
-        delegada
-            .copyWith(status: StatusReserva.aprovada)
-            .aguardandoAceiteDoResponsavel,
-        isFalse,
-      );
-      expect(
-        _reserva(status: StatusReserva.pendente).aguardandoAceiteDoResponsavel,
-        isFalse,
-      );
-    });
+        expect(delegada.aguardandoAceiteDoResponsavel, isTrue);
+        expect(
+          delegada
+              .copyWith(aceitoPeloResponsavelEm: DateTime.now())
+              .aguardandoAceiteDoResponsavel,
+          isFalse,
+        );
+        expect(
+          delegada
+              .copyWith(status: StatusReserva.aprovada)
+              .aguardandoAceiteDoResponsavel,
+          isFalse,
+        );
+        expect(
+          _reserva(
+            status: StatusReserva.pendente,
+          ).aguardandoAceiteDoResponsavel,
+          isFalse,
+        );
+      },
+    );
 
     test('emAndamento vale para aprovada e agendada dentro da janela', () {
       final agora = DateTime.now();
@@ -311,18 +317,27 @@ void main() {
 
       expect(_reserva(inicio: inicio, fim: fim).emAndamento, isTrue);
       expect(
-        _reserva(inicio: inicio, fim: fim, status: StatusReserva.agendada)
-            .emAndamento,
+        _reserva(
+          inicio: inicio,
+          fim: fim,
+          status: StatusReserva.agendada,
+        ).emAndamento,
         isTrue,
       );
       expect(
-        _reserva(inicio: inicio, fim: fim, status: StatusReserva.pendente)
-            .emAndamento,
+        _reserva(
+          inicio: inicio,
+          fim: fim,
+          status: StatusReserva.pendente,
+        ).emAndamento,
         isFalse,
       );
       expect(
-        _reserva(inicio: inicio, fim: fim, status: StatusReserva.concluida)
-            .emAndamento,
+        _reserva(
+          inicio: inicio,
+          fim: fim,
+          status: StatusReserva.concluida,
+        ).emAndamento,
         isFalse,
       );
     });
@@ -413,21 +428,17 @@ void main() {
       expect(serie.periodoFormatado, '19/10/2026 a 18/12/2026');
       expect(serie.diasSemana, [DiaSemana.segunda, DiaSemana.quarta]);
       expect(serie.criadoEm.toUtc(), DateTime.utc(2026, 10, 18, 12));
-      expect(serie.criadoPorId, 'c1');
     });
 
     test('fromJsonOpcional devolve nulo para nulo', () {
       expect(SerieRecorrencia.fromJsonOpcional(null), isNull);
     });
 
-    test('criadoPorId ausente lança', () {
-      final semCriador = Map<String, dynamic>.from(_serieJson)
+    test('série embutida na reserva, sem criadoPorId, é lida', () {
+      final embutida = Map<String, dynamic>.from(_serieJson)
         ..remove('criadoPorId');
 
-      expect(
-        () => SerieRecorrencia.fromJson(semCriador),
-        throwsA(isA<TypeError>()),
-      );
+      expect(SerieRecorrencia.fromJson(embutida).id, 'sr1');
     });
   });
 
@@ -451,6 +462,18 @@ void main() {
       });
 
       expect(resultado.serieRecorrencia!.id, 'sr1');
+    });
+
+    test('série confirmada informa quantas reservas nasceram', () {
+      final resultado = ResultadoCriacaoReserva.fromJson({
+        'serieRecorrencia': _serieJson,
+        'reservas': [
+          {..._json, 'status': 'APROVADA'},
+          {..._json, 'id': 'r2', 'status': 'APROVADA'},
+        ],
+      });
+
+      expect(resultado.mensagem, '2 reservas confirmadas.');
     });
 
     test('reserva em análise aguarda aprovação', () {
@@ -522,10 +545,9 @@ void main() {
     });
 
     test('mensal sem dataFim nem dias manda só o tipo', () {
-      expect(
-        RegraRecorrencia.criar(tipo: TipoRecorrencia.mensal).toJson(),
-        {'tipo': 'MENSAL'},
-      );
+      expect(RegraRecorrencia.criar(tipo: TipoRecorrencia.mensal).toJson(), {
+        'tipo': 'MENSAL',
+      });
     });
   });
 
@@ -537,14 +559,14 @@ void main() {
     );
 
     ReservaCoordenador reservaCoordenador() => ReservaCoordenador(
-          sala: _sala,
-          solicitante: _coordenador,
-          responsavel: _coordenador,
-          inicio: _inicioUtc.toLocal(),
-          fim: _fimUtc.toLocal(),
-          finalidade: 'Colegiado',
-          recorrencia: regra,
-        );
+      sala: _sala,
+      solicitante: _coordenador,
+      responsavel: _coordenador,
+      inicio: _inicioUtc.toLocal(),
+      fim: _fimUtc.toLocal(),
+      finalidade: 'Colegiado',
+      recorrencia: regra,
+    );
 
     test('deriva tipoRecorrencia da regra e manda recorrencia no toJson', () {
       final reserva = reservaCoordenador();
@@ -597,10 +619,9 @@ void main() {
 
     test('reserva terminal não se cancela de novo', () {
       expect(
-        _reserva(status: StatusReserva.cancelada).cancelavelPor(
-          _usuario('u1', Perfil.aluno),
-          agora: antes,
-        ),
+        _reserva(
+          status: StatusReserva.cancelada,
+        ).cancelavelPor(_usuario('u1', Perfil.aluno), agora: antes),
         isFalse,
       );
     });
@@ -611,6 +632,46 @@ void main() {
           _usuario('c1', Perfil.coordenador),
           agora: _inicioUtc.toLocal(),
         ),
+        isFalse,
+      );
+    });
+  });
+
+  group('analisavelPor', () {
+    test('o responsável designado analisa a reserva pendente delegada', () {
+      expect(
+        _reserva(
+          responsavel: _professor,
+          status: StatusReserva.pendente,
+        ).analisavelPor(_usuario('u2', Perfil.professor)),
+        isTrue,
+      );
+    });
+
+    test('quem não é o responsável não analisa', () {
+      expect(
+        _reserva(
+          responsavel: _professor,
+          status: StatusReserva.pendente,
+        ).analisavelPor(_usuario('c1', Perfil.coordenador)),
+        isFalse,
+      );
+    });
+
+    test('reserva fora de análise não se analisa', () {
+      expect(
+        _reserva(
+          responsavel: _professor,
+        ).analisavelPor(_usuario('u2', Perfil.professor)),
+        isFalse,
+      );
+    });
+
+    test('o próprio solicitante não analisa a reserva que pediu', () {
+      expect(
+        _reserva(
+          status: StatusReserva.pendente,
+        ).analisavelPor(_usuario('u1', Perfil.aluno)),
         isFalse,
       );
     });

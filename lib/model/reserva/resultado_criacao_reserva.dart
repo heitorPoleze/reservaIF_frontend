@@ -10,8 +10,9 @@ class ResultadoCriacaoReserva {
 
   factory ResultadoCriacaoReserva.fromJson(Map<String, dynamic> json) =>
       ResultadoCriacaoReserva(
-        serieRecorrencia:
-            SerieRecorrencia.fromJsonOpcional(json['serieRecorrencia']),
+        serieRecorrencia: SerieRecorrencia.fromJsonOpcional(
+          json['serieRecorrencia'],
+        ),
         reservas: List.unmodifiable(
           (json['reservas'] as List).map(
             (reserva) => Reserva.fromJson(reserva as Map<String, dynamic>),
@@ -26,7 +27,11 @@ class ResultadoCriacaoReserva {
   bool get aguardaAprovacao =>
       reservas.any((reserva) => reserva.status == StatusReserva.pendente);
 
-  String get mensagem => aguardaAprovacao
-      ? 'Solicitação enviada para aprovação.'
-      : 'Reserva confirmada.';
+  String get mensagem {
+    if (aguardaAprovacao) return 'Solicitação enviada para aprovação.';
+
+    return serieRecorrencia == null
+        ? 'Reserva confirmada.'
+        : '${reservas.length} reservas confirmadas.';
+  }
 }

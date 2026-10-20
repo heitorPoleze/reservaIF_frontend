@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/model/reserva/horario_do_dia.dart';
-import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/sala/sala.dart';
 import 'package:reserva_if/services/services_predio.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/view/reserva/nova_reserva_view.dart';
-import 'package:reserva_if/view/reserva/widgets/dialogo_justificativa_cancelamento.dart';
+import 'package:reserva_if/view/reserva/widgets/cancelar_reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/lista_horarios_do_dia.dart';
-import 'package:reserva_if/view/reserva/widgets/painel_detalhes_reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/painel_horario_livre.dart';
 import 'package:reserva_if/view/theme/app_cores.dart';
 import 'package:reserva_if/view/theme/app_estilos.dart';
@@ -18,9 +16,9 @@ import 'package:reserva_if/view/widgets/calendario_mensal.dart';
 import 'package:reserva_if/view/widgets/campo_selecao.dart';
 import 'package:reserva_if/view/widgets/corpo_com_estado.dart';
 import 'package:reserva_if/view/widgets/estados.dart';
-import 'package:reserva_if/view/widgets/feedback_usuario.dart';
 import 'package:reserva_if/view/widgets/painel_modal.dart';
 import 'package:reserva_if/viewmodel/reserva/agendamento_viewmodel.dart';
+import 'package:reserva_if/viewmodel/reserva/reservas_mudaram.dart';
 import 'package:reserva_if/viewmodel/sessao/sessao_viewmodel.dart';
 
 class AgendamentoView extends StatefulWidget {
@@ -38,6 +36,7 @@ class _AgendamentoViewState extends State<AgendamentoView> {
     usuario: context.read<SessaoViewModel>().usuario!,
     servicePredio: ServicesPredio(),
     serviceReserva: ServicesReserva(),
+    reservasMudaram: context.read<ReservasMudaram>(),
   );
 
   @override
@@ -58,7 +57,7 @@ class _AgendamentoViewState extends State<AgendamentoView> {
     if (reserva == null) {
       _abrirHorarioLivre(horario);
     } else {
-      _abrirDetalhes(reserva);
+      abrirDetalhesDaReserva(context, reserva: reserva, viewModel: _viewModel);
     }
   }
 
@@ -76,50 +75,22 @@ class _AgendamentoViewState extends State<AgendamentoView> {
     );
   }
 
-  Future<void> _reservar(HorarioDoDia horario, Sala sala) async {
-    final reservou = await Navigator.push<bool>(
+  void _reservar(HorarioDoDia horario, Sala sala) {
+    Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => NovaReservaView(horario: horario, sala: sala),
       ),
     );
-
-    if (reservou == true && mounted) _viewModel.carregarReservas();
-  }
-
-  void _abrirDetalhes(Reserva reserva) {
-    mostrarPainelModal<void>(
-      context: context,
-      construir: (_) => PainelDetalhesReserva(
-        reserva: reserva,
-        podeCancelar: _viewModel.podeCancelar(reserva),
-        aoCancelar: () => _cancelar(reserva),
-      ),
-    );
-  }
-
-  Future<void> _cancelar(Reserva reserva) async {
-    final justificativa = await pedirJustificativaDeCancelamento(context);
-    if (justificativa == null || !mounted) return;
-
-    final resultado = await _viewModel.cancelar(reserva, justificativa);
-    if (!mounted) return;
-
-    if (resultado == null) {
-      mostrarErro(
-        context,
-        _viewModel.mensagemErroCancelamento ??
-            'Não foi possível cancelar a reserva.',
-      );
-    } else if (resultado.solicitacaoEnviada) {
-      mostrarInfo(context, resultado.mensagem);
-    } else {
-      mostrarSucesso(context, resultado.mensagem);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final geracao = context.watch<ReservasMudaram>().geracao;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _viewModel.sincronizarCom(geracao);
+    });
+
     return Scaffold(
       appBar: const AppBarPadrao(titulo: 'Agendamentos'),
       body: ListenableBuilder(

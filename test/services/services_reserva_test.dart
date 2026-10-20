@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
+import 'package:reserva_if/model/reserva/status_reserva.dart';
 import 'package:reserva_if/model/sala/sala.dart';
 import 'package:reserva_if/model/usuario/usuario_resumo.dart';
 import 'package:reserva_if/services/http/exceptions/api_exceptions.dart';
@@ -142,7 +143,7 @@ void main() {
     });
 
     test(
-      'busca agendamentos sob responsabilidade na rota responsavel',
+      'busca agendamentos sob responsabilidade na rota sob-minha-responsabilidade',
       () async {
         http.Request? enviada;
 
@@ -153,7 +154,10 @@ void main() {
         );
 
         expect(enviada!.method, 'GET');
-        expect(enviada!.url.path, endsWith('/reservas/responsavel'));
+        expect(
+          enviada!.url.path,
+          endsWith('/reservas/sob-minha-responsabilidade'),
+        );
         expect(enviada!.url.queryParameters, isEmpty);
         expect(reservas.single.finalidade, 'Monitoria de Algoritmos');
       },
@@ -287,6 +291,78 @@ void main() {
 
       expect(erro, isA<ApiException>());
       expect(erro.mensagem, contains('Você não pode cancelar esta reserva.'));
+    });
+  });
+
+  group('aprovar', () {
+    test('envia o PATCH sem corpo e lê a reserva aprovada', () async {
+      http.Request? enviada;
+
+      final reserva = await comRespostaFixa(
+        () => service.aprovar('r1'),
+        respostaJson({..._reservaJson, 'status': 'APROVADA'}, 200),
+        capturar: (requisicao) => enviada = requisicao,
+      );
+
+      expect(enviada!.method, 'PATCH');
+      expect(enviada!.url.path, endsWith('/reservas/r1/aprovar'));
+      expect(enviada!.body, isEmpty);
+      expect(reserva.status, StatusReserva.aprovada);
+    });
+
+    test('409 repassa a mensagem do backend', () async {
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          () => service.aprovar('r1'),
+          respostaJson({
+            'erro': 'CONFLITO',
+            'mensagem': 'Conflito de horário na sala.',
+          }, 409),
+        ),
+      );
+
+      expect(erro, isA<ApiException>());
+      expect(erro.mensagem, contains('Conflito de horário na sala.'));
+    });
+  });
+
+  group('rejeitar', () {
+    test('envia o motivo e lê a reserva rejeitada', () async {
+      http.Request? enviada;
+
+      final reserva = await comRespostaFixa(
+        () => service.rejeitar('r1', 'Sala interditada.'),
+        respostaJson({
+          ..._reservaJson,
+          'status': 'REJEITADA',
+          'motivoRejeicao': 'Sala interditada.',
+        }, 200),
+        capturar: (requisicao) => enviada = requisicao,
+      );
+
+      expect(enviada!.method, 'PATCH');
+      expect(enviada!.url.path, endsWith('/reservas/r1/rejeitar'));
+      expect(jsonDecode(enviada!.body), {'motivo': 'Sala interditada.'});
+      expect(reserva.status, StatusReserva.rejeitada);
+      expect(reserva.motivoRejeicao, 'Sala interditada.');
+    });
+
+    test('403 repassa a mensagem do backend', () async {
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          () => service.rejeitar('r1', 'Motivo'),
+          respostaJson({
+            'erro': 'PERMISSAO_NEGADA',
+            'mensagem': 'Reserva sob responsabilidade de outro coordenador.',
+          }, 403),
+        ),
+      );
+
+      expect(erro, isA<ApiException>());
+      expect(
+        erro.mensagem,
+        contains('Reserva sob responsabilidade de outro coordenador.'),
+      );
     });
   });
 }

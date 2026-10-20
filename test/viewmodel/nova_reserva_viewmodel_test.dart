@@ -4,8 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/model/reserva/horario_do_dia.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
+import 'package:reserva_if/model/reserva/reserva_coordenador.dart';
 import 'package:reserva_if/model/reserva/resultado_criacao_reserva.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
+import 'package:reserva_if/model/reserva/tipo_recorrencia.dart';
 import 'package:reserva_if/model/sala/sala.dart';
 import 'package:reserva_if/model/usuario/perfil.dart';
 import 'package:reserva_if/model/usuario/perfil_usuario.dart';
@@ -16,6 +18,7 @@ import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/services/services_usuario.dart';
 import 'package:reserva_if/utils/datas.dart';
 import 'package:reserva_if/viewmodel/reserva/nova_reserva_viewmodel.dart';
+import 'package:reserva_if/viewmodel/reserva/reservas_mudaram.dart';
 
 const _predio = Predio(id: 'p1', nome: 'Prédio TI');
 
@@ -38,6 +41,16 @@ const _aluno = PerfilUsuario(
   perfil: Perfil.aluno,
   tipoCredencial: TipoCredencial.matriculaAluno,
   identificador: '20231001',
+  ativo: true,
+);
+
+const _coordenadorLogado = PerfilUsuario(
+  uuid: 'c1',
+  nome: 'Roberto Lima',
+  email: 'roberto@ifes.edu.br',
+  perfil: Perfil.coordenador,
+  tipoCredencial: TipoCredencial.siapeDocente,
+  identificador: '7654321',
   ativo: true,
 );
 
@@ -114,22 +127,23 @@ NovaReservaViewModel _viewModel(
   ServicesReserva service, {
   PerfilUsuario usuario = _usuario,
   ServicesUsuario? serviceUsuario,
+  ReservasMudaram? reservasMudaram,
 }) => NovaReservaViewModel(
   horario: _horario,
   sala: _sala,
   usuario: usuario,
   service: service,
   serviceUsuario: serviceUsuario ?? ServicesUsuarioFalso(),
+  reservasMudaram: reservasMudaram ?? ReservasMudaram(),
 );
 
 void main() {
   test('monta a reserva do horário com o usuário da sessão', () async {
     final service = ServicesReservaFalso();
 
-    final resultado = await _viewModel(service).reservar(
-      justificativa: '  Aula prática  ',
-      observacoes: ' Projetor ',
-    );
+    final resultado = await _viewModel(
+      service,
+    ).reservar(justificativa: '  Aula prática  ', observacoes: ' Projetor ');
 
     final enviada = service.enviadas.single;
     expect(resultado!.reservas.single.id, 'r1');
@@ -142,18 +156,36 @@ void main() {
     expect(enviada.observacoes, 'Projetor');
   });
 
-  test('justificativa vazia manda finalidade padrão e omite observações', () async {
-    final service = ServicesReservaFalso();
+  test(
+    'justificativa vazia manda finalidade padrão e omite observações',
+    () async {
+      final service = ServicesReservaFalso();
 
-    await _viewModel(service).reservar(justificativa: '   ', observacoes: '');
+      await _viewModel(service).reservar(justificativa: '   ', observacoes: '');
 
-    final corpo = service.enviadas.single.toJson();
-    expect(corpo['finalidade'], Reserva.finalidadeNaoInformada);
-    expect(corpo.containsKey('observacoes'), isFalse);
+      final corpo = service.enviadas.single.toJson();
+      expect(corpo['finalidade'], Reserva.finalidadeNaoInformada);
+      expect(corpo.containsKey('observacoes'), isFalse);
+    },
+  );
+
+  test('reservar com sucesso invalida o canal de reservas', () async {
+    final canal = ReservasMudaram();
+
+    await _viewModel(
+      ServicesReservaFalso(),
+      reservasMudaram: canal,
+    ).reservar(justificativa: '', observacoes: '');
+
+    expect(canal.geracao, 1);
   });
 
   test('falha devolve nulo e expõe a mensagem do backend', () async {
-    final viewModel = _viewModel(ServicesReservaFalso(falhar: true));
+    final canal = ReservasMudaram();
+    final viewModel = _viewModel(
+      ServicesReservaFalso(falhar: true),
+      reservasMudaram: canal,
+    );
 
     final resultado = await viewModel.reservar(
       justificativa: '',
@@ -163,6 +195,7 @@ void main() {
     expect(resultado, isNull);
     expect(viewModel.mensagemErro, 'Sala já reservada neste horário.');
     expect(viewModel.isLoading, isFalse);
+    expect(canal.geracao, 0);
   });
 
   test('segundo toque durante o envio é ignorado', () async {
@@ -238,18 +271,83 @@ void main() {
       expect(service.enviadas, isEmpty);
     });
 
-    test('falha na busca fica no erro dos servidores, não no da tela', () async {
-      final viewModel = _viewModel(
-        ServicesReservaFalso(),
-        usuario: _aluno,
-        serviceUsuario: ServicesUsuarioFalso(falhar: true),
+    test(
+      'falha na busca fica no erro dos servidores, não no da tela',
+      () async {
+        final viewModel = _viewModel(
+          ServicesReservaFalso(),
+          usuario: _aluno,
+          serviceUsuario: ServicesUsuarioFalso(falhar: true),
+        );
+
+        await viewModel.carregarServidores();
+
+        expect(
+          viewModel.mensagemErroServidores,
+          'Erro ao buscar os servidores.',
+        );
+        expect(viewModel.mensagemErro, isNull);
+        expect(viewModel.isCarregandoServidores, isFalse);
+      },
+    );
+  });
+
+  group('recorrência', () {
+    test('só o coordenador escolhe, e semanal fica fora das opções', () {
+      final service = ServicesReservaFalso();
+
+      expect(
+        _viewModel(
+          service,
+          usuario: _coordenadorLogado,
+        ).podeEscolherRecorrencia,
+        isTrue,
       );
+      expect(_viewModel(service).podeEscolherRecorrencia, isFalse);
+      expect(_viewModel(service).tiposDeRecorrencia, [
+        TipoRecorrencia.unica,
+        TipoRecorrencia.mensal,
+        TipoRecorrencia.semestral,
+        TipoRecorrencia.anual,
+      ]);
+    });
 
-      await viewModel.carregarServidores();
+    test('coordenador com série mensal envia a regra de recorrência', () async {
+      final service = ServicesReservaFalso();
+      final viewModel = _viewModel(service, usuario: _coordenadorLogado)
+        ..selecionarRecorrencia(TipoRecorrencia.mensal);
 
-      expect(viewModel.mensagemErroServidores, 'Erro ao buscar os servidores.');
-      expect(viewModel.mensagemErro, isNull);
-      expect(viewModel.isCarregandoServidores, isFalse);
+      await viewModel.reservar(justificativa: 'Aulas', observacoes: '');
+
+      final enviada = service.enviadas.single;
+      expect(enviada, isA<ReservaCoordenador>());
+      expect(enviada.toJson()['recorrencia'], {'tipo': 'MENSAL'});
+    });
+
+    test('coordenador com reserva única não envia recorrência', () async {
+      final service = ServicesReservaFalso();
+      final viewModel = _viewModel(service, usuario: _coordenadorLogado)
+        ..selecionarRecorrencia(TipoRecorrencia.mensal)
+        ..selecionarRecorrencia(null);
+
+      await viewModel.reservar(justificativa: '', observacoes: '');
+
+      expect(viewModel.recorrencia, TipoRecorrencia.unica);
+      expect(
+        service.enviadas.single.toJson().containsKey('recorrencia'),
+        isFalse,
+      );
+    });
+
+    test('quem não é coordenador nunca envia recorrência', () async {
+      final service = ServicesReservaFalso();
+      final viewModel = _viewModel(service)
+        ..selecionarRecorrencia(TipoRecorrencia.anual);
+
+      await viewModel.reservar(justificativa: '', observacoes: '');
+
+      expect(viewModel.recorrente, isFalse);
+      expect(service.enviadas.single, isNot(isA<ReservaCoordenador>()));
     });
   });
 }
