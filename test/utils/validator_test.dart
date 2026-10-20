@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:reserva_if/model/usuario/credencial/tipo_entrada.dart';
 import 'package:reserva_if/utils/validator.dart';
 
 void main() {
@@ -15,6 +16,11 @@ void main() {
   });
 
   group('validarEmail', () {
+    test('aceita vazio porque o e-mail é opcional', () {
+      expect(Validator.validarEmail(null), isNull);
+      expect(Validator.validarEmail('   '), isNull);
+    });
+
     test('aceita e-mail institucional', () {
       expect(Validator.validarEmail('nome.sobrenome@ifes.edu.br'), isNull);
     });
@@ -32,9 +38,9 @@ void main() {
   });
 
   group('validarTelefone', () {
-    test('exige um telefone com DDD e aceita formatação comum', () {
-      expect(Validator.validarTelefone(null), 'O telefone é obrigatório');
-      expect(Validator.validarTelefone('   '), 'O telefone é obrigatório');
+    test('aceita vazio e, quando informado, exige DDD', () {
+      expect(Validator.validarTelefone(null), isNull);
+      expect(Validator.validarTelefone('   '), isNull);
       expect(Validator.validarTelefone('(27) 99999-0000'), isNull);
       expect(Validator.validarTelefone('2733330000'), isNull);
       expect(Validator.validarTelefone('abc27999990000'), isNotNull);
@@ -116,6 +122,42 @@ void main() {
       expect(Validator.inteiroPositivo('-1'), isNotNull);
       expect(Validator.inteiroPositivo('abc'), isNotNull);
       expect(Validator.inteiroPositivo('40'), isNull);
+    });
+  });
+  group('validarEmailObrigatorio', () {
+    test('recusa vazio e e-mail malformado', () {
+      expect(Validator.validarEmailObrigatorio(null), isNotNull);
+      expect(Validator.validarEmailObrigatorio('  '), isNotNull);
+      expect(Validator.validarEmailObrigatorio('ana@'), isNotNull);
+      expect(Validator.validarEmailObrigatorio('ana@ifes.edu.br'), isNull);
+    });
+  });
+
+  group('validarSenha no limite do bcrypt', () {
+    test('aceita 72 bytes e recusa 73', () {
+      expect(Validator.validarSenha('a' * 72), isNull);
+      expect(Validator.validarSenha('a' * 73), isNotNull);
+    });
+
+    test('conta bytes, não caracteres', () {
+      expect(Validator.validarSenha('ç' * 37), isNotNull);
+    });
+  });
+
+  group('validarIdentificador', () {
+    test('escolhe a regra pelo tipo de entrada', () {
+      expect(
+        Validator.validarIdentificador(TipoEntrada.siape)('1234567'),
+        isNull,
+      );
+      expect(
+        Validator.validarIdentificador(TipoEntrada.siape)('20241tsi0063'),
+        isNotNull,
+      );
+      expect(
+        Validator.validarIdentificador(TipoEntrada.matricula)('20241tsi0063'),
+        isNull,
+      );
     });
   });
 }

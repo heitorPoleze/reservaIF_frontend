@@ -4,7 +4,7 @@ abstract class Servidor extends Usuario {
   const Servidor({
     super.id,
     required super.nome,
-    required super.email,
+    super.email,
     super.telefone,
     required super.perfil,
     required this.departamento,

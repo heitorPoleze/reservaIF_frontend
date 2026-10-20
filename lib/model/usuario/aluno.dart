@@ -5,7 +5,7 @@ class Aluno extends Usuario {
   const Aluno({
     super.id,
     required super.nome,
-    required super.email,
+    super.email,
     super.telefone,
     required this.matricula,
     required this.curso,

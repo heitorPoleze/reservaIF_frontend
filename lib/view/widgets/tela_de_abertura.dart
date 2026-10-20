@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reserva_if/view/theme/app_cores.dart';
+import 'package:reserva_if/view/widgets/scaffold_de_autenticacao.dart';
 
 class TelaDeAbertura extends StatelessWidget {
   const TelaDeAbertura({super.key});
@@ -9,27 +10,25 @@ class TelaDeAbertura extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppCores.casca,
-      body: Center(
+    return ScaffoldDeAutenticacao(
+      corpo: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.meeting_room_outlined,
               size: _ladoDaLogo,
-              color: AppCores.sobreCasca,
+              color: AppCores.textoPrimario,
             ),
             const SizedBox(height: 16),
             Text(
               'reservaIF',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(color: AppCores.sobreCasca),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: AppCores.textoPrimario,
+              ),
             ),
             const SizedBox(height: _respiro),
-            const CircularProgressIndicator(color: AppCores.sobreCasca),
+            const CircularProgressIndicator(color: AppCores.textoPrimario),
           ],
         ),
       ),

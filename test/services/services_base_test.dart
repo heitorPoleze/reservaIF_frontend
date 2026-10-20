@@ -203,6 +203,21 @@ void main() {
       expect(erro.mensagem, isNot(contains('Falha na comunicação')));
     });
 
+    test('ErroPadrao mostra a mensagem, não o código', () async {
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          () => ServiceDeTeste().cadastrar('x'),
+          respostaJson(
+            {'erro': 'VALIDACAO', 'mensagem': 'Telefone invalido.'},
+            400,
+          ),
+        ),
+      );
+
+      expect(erro.mensagem, contains('Telefone invalido.'));
+      expect(erro.mensagem, isNot(contains('VALIDACAO')));
+    });
+
     test('lista de erros de validação vira ApiValidationException', () async {
       final erro = await erroDe(
         () => comRespostaFixa(

@@ -28,6 +28,18 @@ void main() {
       expect(usuario.perfil, Perfil.aluno);
     });
 
+    test('aceita JSON sem email', () {
+      final usuario = Usuario.fromJson({
+        'id': 'u2',
+        'nome': 'Bia',
+        'perfil': 'ALUNO',
+        'matricula': '2026',
+        'curso': 'SI',
+      });
+
+      expect(usuario.email, isNull);
+    });
+
     test('TECNICO e PROFESSOR viram servidores distintos', () {
       final servidor = {..._comum, 'departamento': 'DCC', 'siape': '1234567'};
 
@@ -109,6 +121,12 @@ void main() {
       expect(json.containsKey('telefone'), isFalse);
       expect(json['perfil'], 'PROFESSOR');
       expect(json['siape'], '1234567');
+    });
+
+    test('omite email quando ausente', () {
+      const semEmail = Aluno(nome: 'Bia', matricula: '2026', curso: 'SI');
+
+      expect(semEmail.toJson().containsKey('email'), isFalse);
     });
 
     test('inclui telefone quando informado', () {

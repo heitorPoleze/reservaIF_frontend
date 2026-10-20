@@ -1,51 +1,61 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppCores {
-  static const casca = Color(0xFF2F7D4F);
+  static const casca = Color(0xFFFFFFFF);
 
-  static const sobreCasca = Color(0xFFFFFFFF);
+  static const sobreCasca = Color(0xFF233C37);
 
-  static const sobreCascaInativo = Color(0xFFD5E8DC);
+  static const sobreCascaInativo = Color(0xFF4A5E58);
 
-  static const acao = Color(0xFF256B43);
+  static const indicadorCasca = Color(0xFFC9DDD2);
 
-  static const acaoForte = Color(0xFF1A4D30);
+  static const acao = Color(0xFF257364);
+
+  static const acaoForte = Color(0xFF233C37);
 
   static const sobreAcao = Color(0xFFFFFFFF);
 
-  static const acento = Color(0xFFC62828);
+  static const acento = Color(0xFF7D9773);
 
-  static const sobreAcento = Color(0xFFFFFFFF);
+  static const acentoSuave = Color(0xFF9BBC8E);
 
-  static const fundo = Color(0xFFF4F6F4);
+  static const sobreAcento = Color(0xFF233C37);
 
-  static const fundoAuth = Color(0xFF2F7D4F);
+  static const fundo = Color(0xFFE6EBE5);
+
+  static const fundoAuth = Color(0xFF9BBC8E);
 
   static const superficie = Color(0xFFFFFFFF);
 
-  static const fundoCampoInativo = Color(0xFFE6EAE7);
+  static const fundoCampoInativo = Color(0xFFE7F1EB);
 
-  static const borda = Color(0xFFD0D7D2);
+  static const fundoIcone = Color(0xFFE7F1EB);
 
-  static const bordaCampo = Color(0xFF7E8A82);
+  static const borda = Color(0xFFC9DDD2);
+
+  static const bordaCampo = Color(0xFF73817C);
 
   static const sombra = Color(0x0D000000);
 
-  static const sombraChrome = Color(0x1A1B2A20);
+  static const sombraChrome = Color(0x1A233C37);
 
-  static const textoPrimario = Color(0xFF1B2A20);
+  static const textoPrimario = Color(0xFF233C37);
 
-  static const textoSecundario = Color(0xFF4F5D55);
+  static const textoSecundario = Color(0xFF4A5E58);
 
-  static const textoTerciario = Color(0xFF66736B);
+  static const textoTerciario = Color(0xFF55675F);
 
-  static const textoInativo = Color(0xFF9AA59E);
+  static const textoInativo = Color(0xFFB6C0B8);
 
-  static const erro = Color(0xFFB3261E);
+  static const erro = Color(0xFFD23A3A);
 
   static const aviso = Color(0xFF8A5200);
 
-  static const sucesso = Color(0xFF2E7D32);
+  static const sucesso = Color(0xFF1ED83A);
 
-  static const link = Color(0xFF1A5FB4);
+  static const sobreSucesso = Color(0xFF233C37);
+
+  static const destaqueInformativo = Color(0xFF3AA299);
+
+  static const link = Color(0xFF257364);
 }

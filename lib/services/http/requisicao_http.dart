@@ -19,16 +19,32 @@ class RequisicaoHttp {
   final VerboHttp verbo;
   final Uri rota;
   final Object? corpo;
+  final Map<String, String> cabecalhos;
   final Duration? _limiteEspecifico;
 
-  const RequisicaoHttp._(this.verbo, this.rota, {this.corpo, Duration? limite})
-      : _limiteEspecifico = limite;
+  const RequisicaoHttp._(
+    this.verbo,
+    this.rota, {
+    this.corpo,
+    this.cabecalhos = const {},
+    Duration? limite,
+  }) : _limiteEspecifico = limite;
 
   const RequisicaoHttp.get(Uri rota, {Duration? limite})
       : this._(VerboHttp.get, rota, limite: limite);
 
-  const RequisicaoHttp.post(Uri rota, {Object? corpo, Duration? limite})
-      : this._(VerboHttp.post, rota, corpo: corpo, limite: limite);
+  const RequisicaoHttp.post(
+    Uri rota, {
+    Object? corpo,
+    Map<String, String> cabecalhos = const {},
+    Duration? limite,
+  }) : this._(
+          VerboHttp.post,
+          rota,
+          corpo: corpo,
+          cabecalhos: cabecalhos,
+          limite: limite,
+        );
 
   const RequisicaoHttp.put(Uri rota, {Object? corpo, Duration? limite})
       : this._(VerboHttp.put, rota, corpo: corpo, limite: limite);
@@ -44,7 +60,8 @@ class RequisicaoHttp {
   Duration get limite =>
       _limiteEspecifico ?? (alteraDados ? limiteDeEscrita : limiteDeLeitura);
 
-  Future<http.Response> enviar(Map<String, String> headers) {
+  Future<http.Response> enviar(Map<String, String> headersPadrao) {
+    final headers = {...headersPadrao, ...cabecalhos};
     final corpoJson = corpo == null ? null : jsonEncode(corpo);
 
     final resposta = switch (verbo) {

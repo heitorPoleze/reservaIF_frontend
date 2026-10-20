@@ -5,7 +5,12 @@ void mostrarErro(BuildContext context, String mensagem) =>
     _mostrar(context, mensagem, AppCores.erro);
 
 void mostrarSucesso(BuildContext context, String mensagem) =>
-    _mostrar(context, mensagem, AppCores.sucesso);
+    _mostrar(
+      context,
+      mensagem,
+      AppCores.sucesso,
+      corDoTexto: AppCores.sobreSucesso,
+    );
 
 void mostrarAviso(BuildContext context, String mensagem) =>
     _mostrar(context, mensagem, AppCores.aviso);
@@ -20,8 +25,19 @@ void mostrarResultado(
 }) =>
     sucesso ? mostrarSucesso(context, mensagem) : mostrarErro(context, mensagem);
 
-void _mostrar(BuildContext context, String mensagem, Color? cor) {
+void _mostrar(
+  BuildContext context,
+  String mensagem,
+  Color? cor, {
+  Color? corDoTexto,
+}) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(mensagem), backgroundColor: cor),
+    SnackBar(
+      content: Text(
+        mensagem,
+        style: corDoTexto == null ? null : TextStyle(color: corDoTexto),
+      ),
+      backgroundColor: cor,
+    ),
   );
 }

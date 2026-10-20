@@ -52,3 +52,12 @@ CLAUDE.md
 CLAUDE.local.md
 **/CLAUDE.md
 **/CLAUDE.local.md
+
+# Skills de agentes (impeccable)
+.agents/
+skills-lock.json
+
+.env
+*.env
+# Segredos de build (--dart-define-from-file)
+.env
