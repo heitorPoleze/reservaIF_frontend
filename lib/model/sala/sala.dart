@@ -27,6 +27,8 @@ class Sala {
 
   final int? capacidade;
 
+  String get nomeComPredio => '$nome · ${predio.nome}';
+
   String get capacidadeFormatada {
     final lugares = capacidade;
 

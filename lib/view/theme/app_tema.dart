@@ -107,7 +107,11 @@ abstract final class AppTema {
     scrolledUnderElevation: 3,
     centerTitle: false,
     systemOverlayStyle: barraDeStatusSobreClaro,
-    titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+    titleTextStyle: TextStyle(
+      color: AppCores.sobreCasca,
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+    ),
   );
 
   static final _navegacao = NavigationBarThemeData(

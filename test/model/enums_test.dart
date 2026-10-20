@@ -90,6 +90,13 @@ void main() {
         [Perfil.aluno],
       );
     });
+
+    test('só aluno exige responsável na reserva', () {
+      expect(
+        Perfil.values.where((perfil) => perfil.exigeResponsavel),
+        [Perfil.aluno],
+      );
+    });
   });
 
   group('TipoRecorrencia e DiaSemana', () {

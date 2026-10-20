@@ -36,6 +36,9 @@ class ServicesUsuarioFalso extends ServicesUsuario {
   }
 }
 
+CadastroViewModel _viewModel({ServicesUsuarioFalso? service}) =>
+    CadastroViewModel(service: service ?? ServicesUsuarioFalso());
+
 Future<bool> _cadastrar(CadastroViewModel viewModel) => viewModel.cadastrar(
   nome: 'Ana Souza',
   email: 'ana@ifes.edu.br',
@@ -46,7 +49,7 @@ Future<bool> _cadastrar(CadastroViewModel viewModel) => viewModel.cadastrar(
 
 void main() {
   test('opções de vínculo seguem o perfil', () async {
-    final viewModel = CadastroViewModel(service: ServicesUsuarioFalso());
+    final viewModel = _viewModel();
     await viewModel.carregarDepartamentos();
 
     expect(viewModel.opcoesDeVinculo.map((item) => item.id), ['biblioteca']);
@@ -58,7 +61,7 @@ void main() {
   });
 
   test('trocar para aluno limpa o vínculo de departamento', () {
-    final viewModel = CadastroViewModel(service: ServicesUsuarioFalso())
+    final viewModel = _viewModel()
       ..selecionarPerfil(Perfil.professor)
       ..selecionarVinculo('biblioteca')
       ..selecionarPerfil(Perfil.aluno);
@@ -67,7 +70,7 @@ void main() {
   });
 
   test('trocar entre servidores mantém o departamento', () {
-    final viewModel = CadastroViewModel(service: ServicesUsuarioFalso())
+    final viewModel = _viewModel()
       ..selecionarPerfil(Perfil.professor)
       ..selecionarVinculo('biblioteca')
       ..selecionarPerfil(Perfil.tecnico);
@@ -75,20 +78,40 @@ void main() {
     expect(viewModel.vinculoId, 'biblioteca');
   });
 
-  test('coordenador não dispara requisição', () async {
+  test('coordenador sem departamento não dispara requisição', () async {
     final service = ServicesUsuarioFalso();
-    final viewModel = CadastroViewModel(service: service)
-      ..selecionarPerfil(Perfil.coordenador)
-      ..selecionarVinculo('biblioteca');
+    final viewModel = _viewModel(service: service)
+      ..selecionarPerfil(Perfil.coordenador);
 
-    expect(viewModel.podeEnviar, isFalse);
     expect(await _cadastrar(viewModel), isFalse);
     expect(service.enviados, isEmpty);
   });
 
+  test('cadastro de coordenador envia o departamento escolhido', () async {
+    final service = ServicesUsuarioFalso();
+    final viewModel = _viewModel(service: service)
+      ..selecionarPerfil(Perfil.coordenador)
+      ..selecionarVinculo('biblioteca');
+
+    expect(await _cadastrar(viewModel), isTrue);
+
+    final enviado = service.enviados.single;
+    expect(enviado.perfil, Perfil.coordenador);
+    expect(enviado.vinculoId, 'biblioteca');
+  });
+
+  test('trocar de professor para coordenador mantém o departamento', () {
+    final viewModel = _viewModel()
+      ..selecionarPerfil(Perfil.professor)
+      ..selecionarVinculo('biblioteca')
+      ..selecionarPerfil(Perfil.coordenador);
+
+    expect(viewModel.vinculoId, 'biblioteca');
+  });
+
   test('cadastro de aluno não exige nem envia vínculo de curso', () async {
     final service = ServicesUsuarioFalso();
-    final viewModel = CadastroViewModel(service: service);
+    final viewModel = _viewModel(service: service);
 
     expect(await _cadastrar(viewModel), isTrue);
     expect(service.enviados.single.perfil, Perfil.aluno);
@@ -97,7 +120,7 @@ void main() {
   });
 
   test('falha na carga do catálogo fica no erro dos vínculos', () async {
-    final viewModel = CadastroViewModel(
+    final viewModel = _viewModel(
       service: ServicesUsuarioFalso(falharCarga: true),
     );
 

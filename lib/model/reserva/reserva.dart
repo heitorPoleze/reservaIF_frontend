@@ -1,6 +1,7 @@
 import '../../utils/datas.dart';
 import '../../utils/formatacao.dart';
 import '../sala/sala.dart';
+import '../usuario/perfil_usuario.dart';
 import '../usuario/usuario_resumo.dart';
 import 'cancelamento.dart';
 import 'serie_recorrencia.dart';
@@ -8,6 +9,8 @@ import 'status_reserva.dart';
 import 'tipo_recorrencia.dart';
 
 class Reserva {
+  static const finalidadeNaoInformada = 'Não informada';
+
   Reserva({
     this.id,
     required this.sala,
@@ -36,31 +39,33 @@ class Reserva {
   }
 
   Reserva.fromJson(Map<String, dynamic> json)
-      : this(
-          id: json['id'] as String?,
-          sala: Sala.fromJson(json['sala'] as Map<String, dynamic>),
-          solicitante: UsuarioResumo.fromJson(
-            json['solicitante'] as Map<String, dynamic>,
-          ),
-          responsavel: UsuarioResumo.fromJson(
-            json['responsavel'] as Map<String, dynamic>,
-          ),
-          analisadoPor: UsuarioResumo.fromJsonOpcional(json['analisadoPor']),
-          serieRecorrencia:
-              SerieRecorrencia.fromJsonOpcional(json['serieRecorrencia']),
-          tipoRecorrencia: TipoRecorrencia.fromJson(json['tipoRecorrencia']),
-          inicio: lerInstanteDoJson(json['dataHoraInicio'])!,
-          fim: lerInstanteDoJson(json['dataHoraFim'])!,
-          finalidade: json['finalidade'] as String,
-          observacoes: json['observacoes'] as String?,
-          status: StatusReserva.fromJson(json['status']),
-          motivoRejeicao: json['motivoRejeicao'] as String?,
-          cancelamento: Cancelamento.fromJsonOpcional(json['cancelamento']),
-          criadoEm: lerInstanteDoJson(json['criadoEm']),
-          aceitoPeloResponsavelEm:
-              lerInstanteDoJson(json['aceitoPeloResponsavelEm']),
-          analisadoEm: lerInstanteDoJson(json['analisadoEm']),
-        );
+    : this(
+        id: json['id'] as String?,
+        sala: Sala.fromJson(json['sala'] as Map<String, dynamic>),
+        solicitante: UsuarioResumo.fromJson(
+          json['solicitante'] as Map<String, dynamic>,
+        ),
+        responsavel: UsuarioResumo.fromJson(
+          json['responsavel'] as Map<String, dynamic>,
+        ),
+        analisadoPor: UsuarioResumo.fromJsonOpcional(json['analisadoPor']),
+        serieRecorrencia: SerieRecorrencia.fromJsonOpcional(
+          json['serieRecorrencia'],
+        ),
+        tipoRecorrencia: TipoRecorrencia.fromJson(json['tipoRecorrencia']),
+        inicio: lerInstanteDoJson(json['dataHoraInicio'])!,
+        fim: lerInstanteDoJson(json['dataHoraFim'])!,
+        finalidade: json['finalidade'] as String,
+        observacoes: json['observacoes'] as String?,
+        status: StatusReserva.fromJson(json['status']),
+        motivoRejeicao: json['motivoRejeicao'] as String?,
+        cancelamento: Cancelamento.fromJsonOpcional(json['cancelamento']),
+        criadoEm: lerInstanteDoJson(json['criadoEm']),
+        aceitoPeloResponsavelEm: lerInstanteDoJson(
+          json['aceitoPeloResponsavelEm'],
+        ),
+        analisadoEm: lerInstanteDoJson(json['analisadoEm']),
+      );
 
   final String? id;
 
@@ -101,6 +106,28 @@ class Reserva {
   String get periodoFormatado =>
       '${formatarDataBr(inicio)}, ${formatarIntervaloDeHoras(inicio, fim)}';
 
+  String get dataComDiaDaSemana => formatarDataComDiaDaSemana(inicio);
+
+  String get horarioFormatado => formatarIntervaloDeHoras(inicio, fim);
+
+  String get recorrenciaFormatada {
+    final serie = serieRecorrencia;
+
+    return serie == null
+        ? tipoRecorrencia.rotulo
+        : '${tipoRecorrencia.rotulo}, de ${serie.periodoFormatado}';
+  }
+
+  String? get criadoEmFormatado => _formatarInstante(criadoEm);
+
+  String? get analisadoEmFormatado => _formatarInstante(analisadoEm);
+
+  String? get aceitoPeloResponsavelEmFormatado =>
+      _formatarInstante(aceitoPeloResponsavelEm);
+
+  static String? _formatarInstante(DateTime? instante) =>
+      instante == null ? null : formatarDataEHora(instante);
+
   Duration get duracao => fim.difference(inicio);
 
   bool get recorrente => tipoRecorrencia != TipoRecorrencia.unica;
@@ -117,6 +144,11 @@ class Reserva {
 
     return status.ocupaSala && !agora.isBefore(inicio) && agora.isBefore(fim);
   }
+
+  bool cancelavelPor(PerfilUsuario usuario, {DateTime? agora}) =>
+      !status.terminal &&
+      (agora ?? DateTime.now()).isBefore(inicio) &&
+      (usuario.podeAprovar || solicitante.id == usuario.uuid);
 
   bool conflitaCom(Reserva outra) =>
       sala.id == outra.sala.id &&
@@ -143,34 +175,33 @@ class Reserva {
     DateTime? criadoEm,
     DateTime? aceitoPeloResponsavelEm,
     DateTime? analisadoEm,
-  }) =>
-      Reserva(
-        id: id ?? this.id,
-        sala: sala ?? this.sala,
-        solicitante: solicitante ?? this.solicitante,
-        responsavel: responsavel ?? this.responsavel,
-        analisadoPor: analisadoPor ?? this.analisadoPor,
-        serieRecorrencia: serieRecorrencia ?? this.serieRecorrencia,
-        tipoRecorrencia: tipoRecorrencia ?? this.tipoRecorrencia,
-        inicio: inicio ?? this.inicio,
-        fim: fim ?? this.fim,
-        finalidade: finalidade ?? this.finalidade,
-        observacoes: observacoes ?? this.observacoes,
-        status: status ?? this.status,
-        motivoRejeicao: motivoRejeicao ?? this.motivoRejeicao,
-        cancelamento: cancelamento ?? this.cancelamento,
-        criadoEm: criadoEm ?? this.criadoEm,
-        aceitoPeloResponsavelEm:
-            aceitoPeloResponsavelEm ?? this.aceitoPeloResponsavelEm,
-        analisadoEm: analisadoEm ?? this.analisadoEm,
-      );
+  }) => Reserva(
+    id: id ?? this.id,
+    sala: sala ?? this.sala,
+    solicitante: solicitante ?? this.solicitante,
+    responsavel: responsavel ?? this.responsavel,
+    analisadoPor: analisadoPor ?? this.analisadoPor,
+    serieRecorrencia: serieRecorrencia ?? this.serieRecorrencia,
+    tipoRecorrencia: tipoRecorrencia ?? this.tipoRecorrencia,
+    inicio: inicio ?? this.inicio,
+    fim: fim ?? this.fim,
+    finalidade: finalidade ?? this.finalidade,
+    observacoes: observacoes ?? this.observacoes,
+    status: status ?? this.status,
+    motivoRejeicao: motivoRejeicao ?? this.motivoRejeicao,
+    cancelamento: cancelamento ?? this.cancelamento,
+    criadoEm: criadoEm ?? this.criadoEm,
+    aceitoPeloResponsavelEm:
+        aceitoPeloResponsavelEm ?? this.aceitoPeloResponsavelEm,
+    analisadoEm: analisadoEm ?? this.analisadoEm,
+  );
 
   Map<String, dynamic> toJson() => {
-        'salaId': sala.id,
-        'responsavelId': responsavel.id,
-        'dataHoraInicio': instanteParaJson(inicio),
-        'dataHoraFim': instanteParaJson(fim),
-        'finalidade': finalidade,
-        if (observacoes != null) 'observacoes': observacoes,
-      };
+    'salaId': sala.id,
+    'responsavelId': responsavel.id,
+    'dataHoraInicio': instanteParaJson(inicio),
+    'dataHoraFim': instanteParaJson(fim),
+    'finalidade': finalidade,
+    if (observacoes != null) 'observacoes': observacoes,
+  };
 }

@@ -5,10 +5,14 @@ import 'package:reserva_if/model/reserva/dia_semana.dart';
 import 'package:reserva_if/model/reserva/regra_recorrencia.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/reserva_coordenador.dart';
+import 'package:reserva_if/model/reserva/resultado_criacao_reserva.dart';
 import 'package:reserva_if/model/reserva/serie_recorrencia.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
 import 'package:reserva_if/model/reserva/tipo_recorrencia.dart';
 import 'package:reserva_if/model/sala/sala.dart';
+import 'package:reserva_if/model/usuario/perfil.dart';
+import 'package:reserva_if/model/usuario/perfil_usuario.dart';
+import 'package:reserva_if/model/usuario/tipo_credencial.dart';
 import 'package:reserva_if/model/usuario/usuario_resumo.dart';
 
 final _inicioUtc = DateTime.utc(2026, 10, 19, 17);
@@ -46,7 +50,6 @@ const _coordenadorJson = {'id': 'c1', 'nome': 'Carla Dias'};
 const _serieJson = {
   'id': 'sr1',
   'criadoPorId': 'c1',
-  'criadoPor': _coordenadorJson,
   'tipoRecorrencia': 'SEMANAL',
   'dataInicio': '2026-10-19T00:00:00.000Z',
   'dataFim': '2026-12-18T00:00:00.000Z',
@@ -101,6 +104,16 @@ Reserva _reserva({
       observacoes: observacoes,
       status: status,
       aceitoPeloResponsavelEm: aceitoPeloResponsavelEm,
+    );
+
+PerfilUsuario _usuario(String uuid, Perfil perfil) => PerfilUsuario(
+      uuid: uuid,
+      nome: 'Usuário $uuid',
+      email: '$uuid@ifes.edu.br',
+      perfil: perfil,
+      tipoCredencial: TipoCredencial.siapeDocente,
+      identificador: '1234567',
+      ativo: true,
     );
 
 void main() {
@@ -168,20 +181,19 @@ void main() {
       }
     });
 
-    test('fromJson lê cancelamento embutido com quem cancelou', () {
+    test('fromJson lê cancelamento embutido com o id de quem cancelou', () {
       final lida = Reserva.fromJson({
         ..._json,
         'status': 'CANCELADA',
         'cancelamento': {
           'canceladoPorId': 'u1',
-          'canceladoPor': _alunaJson,
           'justificativa': 'Feriado',
           'canceladoEm': '2026-10-19T10:00:00.000Z',
         },
       });
 
       expect(lida.status, StatusReserva.cancelada);
-      expect(lida.cancelamento!.canceladoPor.nome, 'Ana Souza');
+      expect(lida.cancelamento!.canceladoPorId, 'u1');
       expect(lida.cancelamento!.justificativa, 'Feriado');
       expect(
         lida.cancelamento!.canceladoEm.toUtc(),
@@ -202,7 +214,7 @@ void main() {
       expect(lida.motivoRejeicao, 'Sala em manutenção');
       expect(lida.recorrente, isTrue);
       expect(lida.serieRecorrencia!.id, 'sr1');
-      expect(lida.serieRecorrencia!.criadoPor.nome, 'Carla Dias');
+      expect(lida.serieRecorrencia!.criadoPorId, 'c1');
     });
 
     test('ida e volta preserva o período', () {
@@ -401,19 +413,66 @@ void main() {
       expect(serie.periodoFormatado, '19/10/2026 a 18/12/2026');
       expect(serie.diasSemana, [DiaSemana.segunda, DiaSemana.quarta]);
       expect(serie.criadoEm.toUtc(), DateTime.utc(2026, 10, 18, 12));
-      expect(serie.criadoPor.id, 'c1');
+      expect(serie.criadoPorId, 'c1');
     });
 
     test('fromJsonOpcional devolve nulo para nulo', () {
       expect(SerieRecorrencia.fromJsonOpcional(null), isNull);
     });
 
-    test('criadoPor ausente lança', () {
+    test('criadoPorId ausente lança', () {
       final semCriador = Map<String, dynamic>.from(_serieJson)
-        ..remove('criadoPor');
+        ..remove('criadoPorId');
 
       expect(
         () => SerieRecorrencia.fromJson(semCriador),
+        throwsA(isA<TypeError>()),
+      );
+    });
+  });
+
+  group('ResultadoCriacaoReserva', () {
+    test('lê as reservas criadas sem série', () {
+      final resultado = ResultadoCriacaoReserva.fromJson({
+        'serieRecorrencia': null,
+        'reservas': [_json],
+      });
+
+      expect(resultado.serieRecorrencia, isNull);
+      expect(resultado.reservas.single.id, 'r1');
+      expect(resultado.aguardaAprovacao, isFalse);
+      expect(resultado.mensagem, 'Reserva confirmada.');
+    });
+
+    test('lê a série recorrente quando informada', () {
+      final resultado = ResultadoCriacaoReserva.fromJson({
+        'serieRecorrencia': _serieJson,
+        'reservas': [_json],
+      });
+
+      expect(resultado.serieRecorrencia!.id, 'sr1');
+    });
+
+    test('reserva em análise aguarda aprovação', () {
+      final resultado = ResultadoCriacaoReserva.fromJson({
+        'serieRecorrencia': null,
+        'reservas': [
+          {..._json, 'status': 'PENDENTE_APROVACAO'},
+        ],
+      });
+
+      expect(resultado.aguardaAprovacao, isTrue);
+      expect(resultado.mensagem, 'Solicitação enviada para aprovação.');
+    });
+
+    test('reserva sem sala embutida lança', () {
+      final semSala = Map<String, dynamic>.from(_json)..remove('sala');
+
+      expect(
+        () => ResultadoCriacaoReserva.fromJson({
+          'serieRecorrencia': null,
+          'reservas': [semSala],
+        }),
         throwsA(isA<TypeError>()),
       );
     });
@@ -503,6 +562,57 @@ void main() {
       expect(copia, isA<ReservaCoordenador>());
       expect(copia.recorrencia, same(regra));
       expect(copia.finalidade, 'Reunião');
+    });
+  });
+
+  group('cancelavelPor', () {
+    final antes = _inicioUtc.toLocal().subtract(const Duration(hours: 1));
+
+    test('o solicitante cancela a própria reserva futura', () {
+      expect(
+        _reserva().cancelavelPor(_usuario('u1', Perfil.aluno), agora: antes),
+        isTrue,
+      );
+    });
+
+    test('o coordenador cancela reserva de outra pessoa', () {
+      expect(
+        _reserva().cancelavelPor(
+          _usuario('c1', Perfil.coordenador),
+          agora: antes,
+        ),
+        isTrue,
+      );
+    });
+
+    test('terceiro que não coordena não cancela', () {
+      expect(
+        _reserva().cancelavelPor(
+          _usuario('u2', Perfil.professor),
+          agora: antes,
+        ),
+        isFalse,
+      );
+    });
+
+    test('reserva terminal não se cancela de novo', () {
+      expect(
+        _reserva(status: StatusReserva.cancelada).cancelavelPor(
+          _usuario('u1', Perfil.aluno),
+          agora: antes,
+        ),
+        isFalse,
+      );
+    });
+
+    test('reserva que já começou não se cancela', () {
+      expect(
+        _reserva().cancelavelPor(
+          _usuario('c1', Perfil.coordenador),
+          agora: _inicioUtc.toLocal(),
+        ),
+        isFalse,
+      );
     });
   });
 }

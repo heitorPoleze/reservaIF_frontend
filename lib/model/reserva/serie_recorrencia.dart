@@ -1,13 +1,12 @@
 import '../../utils/datas.dart';
 import '../../utils/formatacao.dart';
-import '../usuario/usuario_resumo.dart';
 import 'dia_semana.dart';
 import 'tipo_recorrencia.dart';
 
 class SerieRecorrencia {
   const SerieRecorrencia({
     required this.id,
-    required this.criadoPor,
+    required this.criadoPorId,
     required this.tipoRecorrencia,
     required this.dataInicio,
     required this.dataFim,
@@ -18,8 +17,7 @@ class SerieRecorrencia {
   factory SerieRecorrencia.fromJson(Map<String, dynamic> json) =>
       SerieRecorrencia(
         id: json['id'] as String,
-        criadoPor:
-            UsuarioResumo.fromJson(json['criadoPor'] as Map<String, dynamic>),
+        criadoPorId: json['criadoPorId'] as String,
         tipoRecorrencia: TipoRecorrencia.fromJson(json['tipoRecorrencia']),
         dataInicio: lerDataDoJson(json['dataInicio'])!,
         dataFim: lerDataDoJson(json['dataFim'])!,
@@ -35,7 +33,7 @@ class SerieRecorrencia {
 
   final String id;
 
-  final UsuarioResumo criadoPor;
+  final String criadoPorId;
 
   final TipoRecorrencia tipoRecorrencia;
 

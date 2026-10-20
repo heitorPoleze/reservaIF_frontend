@@ -16,23 +16,26 @@ enum Perfil {
 
   final int nivelAcesso;
 
-  TipoCredencial? get tipoCredencial => switch (this) {
+  TipoCredencial get tipoCredencial => switch (this) {
     Perfil.aluno => TipoCredencial.matriculaAluno,
-    Perfil.professor => TipoCredencial.siapeDocente,
+    Perfil.professor || Perfil.coordenador => TipoCredencial.siapeDocente,
     Perfil.tecnico => TipoCredencial.siapeTecnico,
-    Perfil.coordenador => null,
   };
 
   TipoEntrada get identificador =>
       this == Perfil.aluno ? TipoEntrada.matricula : TipoEntrada.siape;
 
-  bool get cadastroDisponivel => tipoCredencial != null;
+  bool get exigeProvisionamento => tipoCredencial.ehServidor;
 
-  bool get exigeProvisionamento => tipoCredencial?.ehServidor ?? true;
+  bool get exigeDepartamento => tipoCredencial.ehServidor;
+
+  bool get coordenaPredio => this == Perfil.coordenador;
 
   bool get podeAprovar => this == Perfil.coordenador;
 
   bool get acompanhaPendencias => this != Perfil.aluno;
+
+  bool get exigeResponsavel => this == Perfil.aluno;
 
   static Perfil fromJson(Object? json) =>
       enumDoJson(values, (perfil) => perfil.valorJson, json);

@@ -16,7 +16,7 @@ CadastroUsuario _cadastro(Perfil perfil) => CadastroUsuario(
   email: 'ana@ifes.edu.br',
   identificador: '1234567',
   senha: 'SenhaSegura1',
-  vinculoId: perfil == Perfil.aluno ? null : 'curso-agronomia',
+  vinculoId: perfil.exigeDepartamento ? '64b7f0c2a1b2c3d4e5f60103' : null,
 );
 
 Map<String, dynamic> _corpo(http.Request requisicao) =>
@@ -75,6 +75,58 @@ void main() {
     });
   });
 
+  group('buscarServidores', () {
+    test('converte a lista de servidores da API', () async {
+      http.Request? enviada;
+
+      final lista = await comRespostaFixa(
+        service.buscarServidores,
+        respostaJson([
+          {
+            'id': '64b7f0c2a1b2c3d4e5f60002',
+            'nome': 'Prof. Carlos Mendes',
+            'siape': '1543210',
+            'role': 'PROFESSOR',
+            'nivelAcesso': 3,
+            'tipoCredencial': 'SIAPE_DOCENTE',
+            'ativo': true,
+          },
+          {
+            'id': '64b7f0c2a1b2c3d4e5f60003',
+            'nome': 'João Silva',
+            'siape': '1654321',
+            'role': 'TECNICO',
+            'nivelAcesso': 2,
+            'tipoCredencial': 'SIAPE_TECNICO',
+            'ativo': true,
+          },
+        ], 200),
+        capturar: (requisicao) => enviada = requisicao,
+      );
+
+      expect(enviada!.method, 'GET');
+      expect(enviada!.url.path, endsWith('/usuarios/servidores'));
+      expect(lista.map((servidor) => servidor.id), [
+        '64b7f0c2a1b2c3d4e5f60002',
+        '64b7f0c2a1b2c3d4e5f60003',
+      ]);
+      expect(lista.last.nome, 'João Silva');
+      expect(lista.map((servidor) => servidor.perfil), [
+        Perfil.professor,
+        Perfil.tecnico,
+      ]);
+    });
+
+    test('404 de lista vazia devolve lista vazia', () async {
+      final lista = await comRespostaFixa(
+        service.buscarServidores,
+        respostaJson({'mensagem': 'Nenhum servidor encontrado.'}, 404),
+      );
+
+      expect(lista, isEmpty);
+    });
+  });
+
   group('cadastrar', () {
     test('aluno vai sem chave de provisionamento nem cursoId', () async {
       http.Request? enviada;
@@ -116,7 +168,7 @@ void main() {
         'chave-dev',
       );
       expect(_corpo(enviada!)['tipoCredencial'], 'SIAPE_DOCENTE');
-      expect(_corpo(enviada!)['departamentoId'], 'curso-agronomia');
+      expect(_corpo(enviada!)['departamentoId'], '64b7f0c2a1b2c3d4e5f60103');
       expect(_corpo(enviada!).containsKey('cursoId'), isFalse);
     });
 
@@ -138,6 +190,51 @@ void main() {
         isFalse,
       );
     });
+
+    test(
+      'coordenador vai para /usuarios/coordenadores com o departamento',
+      () async {
+        http.Request? enviada;
+
+        final uuid = await comRespostaFixa(
+          () => service.cadastrar(_cadastro(Perfil.coordenador)),
+          respostaJson({
+            'uuid': '64b7f0c2a1b2c3d4e5f60333',
+            'nivelAcesso': 2,
+            'role': 'COORDENADOR',
+          }, 201),
+          capturar: (requisicao) => enviada = requisicao,
+        );
+
+        expect(uuid, '64b7f0c2a1b2c3d4e5f60333');
+        expect(enviada!.method, 'POST');
+        expect(enviada!.url.path, endsWith('/usuarios/coordenadores'));
+        expect(_corpo(enviada!)['siape'], '1234567');
+        expect(_corpo(enviada!)['senha'], 'SenhaSegura1');
+        expect(_corpo(enviada!)['departamentoId'], '64b7f0c2a1b2c3d4e5f60103');
+        expect(_corpo(enviada!).containsKey('predioId'), isFalse);
+        expect(_corpo(enviada!).containsKey('numeroPortaria'), isFalse);
+        expect(_corpo(enviada!).containsKey('tipoCredencial'), isFalse);
+      },
+    );
+
+    test(
+      '400 de departamento inexistente repassa a mensagem do backend',
+      () async {
+        final erro = await erroDe(
+          () => comRespostaFixa(
+            () => service.cadastrar(_cadastro(Perfil.coordenador)),
+            respostaJson({
+              'erro': 'VALIDACAO',
+              'mensagem': 'O departamento informado nao existe.',
+            }, 400),
+          ),
+        );
+
+        expect(erro.mensagem, contains('nao existe'));
+        expect(erro.mensagem, isNot(contains('VALIDACAO')));
+      },
+    );
 
     test('403 vira mensagem sobre a chave de provisionamento', () async {
       final erro = await erroDe(

@@ -154,9 +154,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                               BotaoPadrao(
                                 texto: 'Criar conta',
                                 carregando: ocupado,
-                                aoPressionar: _viewModel.podeEnviar
-                                    ? _cadastrar
-                                    : null,
+                                aoPressionar: _cadastrar,
                               ),
                             ],
                           ),
@@ -321,19 +319,20 @@ class _SecaoVinculo extends StatelessWidget {
 
   static const _duracaoDaTroca = Duration(milliseconds: 200);
 
+  String get _titulo =>
+      viewModel.perfil == Perfil.aluno ? 'Matrícula' : 'Vínculo com o Ifes';
+
   @override
   Widget build(BuildContext context) {
     final duracao = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : _duracaoDaTroca;
+    final perfil = viewModel.perfil;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        tituloDeSecaoFormulario(
-          context,
-          viewModel.perfil == Perfil.aluno ? 'Matrícula' : 'Vínculo com o Ifes',
-        ),
+        tituloDeSecaoFormulario(context, _titulo),
         AnimatedSize(
           duration: duracao,
           curve: Curves.easeOutCubic,
@@ -347,21 +346,13 @@ class _SecaoVinculo extends StatelessWidget {
               children: [...anteriores, ?atual],
             ),
             child: _CamposDoVinculo(
-              key: ValueKey(viewModel.perfil == Perfil.aluno),
+              key: ValueKey(perfil.identificador),
               viewModel: viewModel,
               identificadorController: identificadorController,
               habilitado: habilitado,
             ),
           ),
         ),
-        if (!viewModel.podeEnviar) ...[
-          const SizedBox(height: AppEstilos.espacoEntreCampos),
-          const CaixaAviso.informacao(
-            mensagem:
-                'O cadastro de coordenação ainda não está disponível. '
-                'Ele será liberado assim que a instituição abrir esse acesso.',
-          ),
-        ],
       ],
     );
   }
@@ -381,7 +372,8 @@ class _CamposDoVinculo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final identificador = viewModel.perfil.identificador;
+    final perfil = viewModel.perfil;
+    final identificador = perfil.identificador;
     final ehMatricula = identificador == TipoEntrada.matricula;
 
     return Column(
@@ -400,25 +392,79 @@ class _CamposDoVinculo extends StatelessWidget {
           acaoDoTeclado: TextInputAction.next,
           validador: Validator.validarIdentificador(identificador),
         ),
-        if (viewModel.perfil != Perfil.aluno) ...[
+        if (perfil.exigeDepartamento) ...[
           const SizedBox(height: AppEstilos.espacoEntreCampos),
-          _SeletorDeVinculo(viewModel: viewModel, habilitado: habilitado),
+          _SeletorDeDepartamento(viewModel: viewModel, habilitado: habilitado),
         ],
       ],
     );
   }
 }
 
-class _SeletorDeVinculo extends StatelessWidget {
+class _SeletorDeDepartamento extends StatelessWidget {
   final CadastroViewModel viewModel;
   final bool habilitado;
 
-  const _SeletorDeVinculo({required this.viewModel, required this.habilitado});
+  const _SeletorDeDepartamento({
+    required this.viewModel,
+    required this.habilitado,
+  });
 
   @override
   Widget build(BuildContext context) {
-    const rotulo = 'Departamento';
-    final erro = viewModel.mensagemErroVinculos;
+    final opcoes = viewModel.opcoesDeVinculo;
+
+    return _SeletorComCarga<DepartamentoElegivel>(
+      rotulo: 'Departamento',
+      carregando: viewModel.isCarregandoVinculos,
+      mensagemErro: viewModel.mensagemErroVinculos,
+      aoTentarDeNovo: viewModel.carregarDepartamentos,
+      opcoes: opcoes,
+      selecionado: _opcaoComId(
+        opcoes,
+        (opcao) => opcao.id,
+        viewModel.vinculoId,
+      ),
+      rotuloDe: (opcao) => opcao.rotuloDeVinculo,
+      habilitado: habilitado,
+      aoMudar: (opcao) => viewModel.selecionarVinculo(opcao?.id),
+    );
+  }
+}
+
+T? _opcaoComId<T>(List<T> opcoes, String? Function(T) idDe, String? id) {
+  for (final opcao in opcoes) {
+    if (idDe(opcao) == id) return opcao;
+  }
+  return null;
+}
+
+class _SeletorComCarga<T> extends StatelessWidget {
+  final String rotulo;
+  final bool carregando;
+  final String? mensagemErro;
+  final VoidCallback aoTentarDeNovo;
+  final List<T> opcoes;
+  final T? selecionado;
+  final String Function(T) rotuloDe;
+  final bool habilitado;
+  final ValueChanged<T?> aoMudar;
+
+  const _SeletorComCarga({
+    required this.rotulo,
+    required this.carregando,
+    required this.mensagemErro,
+    required this.aoTentarDeNovo,
+    required this.opcoes,
+    required this.selecionado,
+    required this.rotuloDe,
+    required this.habilitado,
+    required this.aoMudar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final erro = mensagemErro;
 
     if (erro != null) {
       return Column(
@@ -429,34 +475,24 @@ class _SeletorDeVinculo extends StatelessWidget {
             mensagem: erro,
             acao: BotaoDeTexto(
               texto: 'Tentar de novo',
-              aoPressionar: viewModel.carregarDepartamentos,
+              aoPressionar: aoTentarDeNovo,
             ),
           ),
         ],
       );
     }
 
-    final carregando = viewModel.isCarregandoVinculos;
-
-    return CampoSelecao<DepartamentoElegivel>(
+    return CampoSelecao<T>(
       key: ValueKey(carregando),
       rotulo: rotulo,
-      valor: _selecionado,
-      opcoes: viewModel.opcoesDeVinculo,
-      rotuloDe: (opcao) => opcao.rotuloDeVinculo,
+      valor: selecionado,
+      opcoes: opcoes,
+      rotuloDe: rotuloDe,
       dica: carregando ? 'Carregando…' : 'Selecione',
       habilitado: habilitado && !carregando,
       validador: Validator.selecaoObrigatoria,
-      aoMudar: (opcao) => viewModel.selecionarVinculo(opcao?.id),
+      aoMudar: aoMudar,
     );
-  }
-
-  DepartamentoElegivel? get _selecionado {
-    final id = viewModel.vinculoId;
-    for (final opcao in viewModel.opcoesDeVinculo) {
-      if (opcao.id == id) return opcao;
-    }
-    return null;
   }
 }
 

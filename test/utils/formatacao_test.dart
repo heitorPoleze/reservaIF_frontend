@@ -16,4 +16,26 @@ void main() {
       'Segunda-feira, 19/10/2026',
     );
   });
+
+  test('formatarFaixaDeHoras separa com travessão curto', () {
+    expect(
+      formatarFaixaDeHoras(
+        DateTime(2026, 10, 19, 14),
+        DateTime(2026, 10, 19, 14, 50),
+      ),
+      '14:00 – 14:50',
+    );
+  });
+
+  test('formatarDiaDaSemanaEDiaDoMes omite o ano', () {
+    expect(
+      formatarDiaDaSemanaEDiaDoMes(DateTime(2026, 10, 19)),
+      'Segunda-feira, 19 de outubro',
+    );
+  });
+
+  test('formatarDiaDaSemanaAbreviado é a sigla em maiúsculas sem ponto', () {
+    expect(formatarDiaDaSemanaAbreviado(DateTime(2026, 10, 19)), 'SEG');
+    expect(formatarDiaDaSemanaAbreviado(DateTime(2026, 10, 24)), 'SÁB');
+  });
 }

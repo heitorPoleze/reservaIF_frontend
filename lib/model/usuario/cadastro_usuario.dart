@@ -29,13 +29,7 @@ class CadastroUsuario {
 
   bool get exigeProvisionamento => perfil.exigeProvisionamento;
 
-  TipoCredencial get tipoCredencial {
-    final tipo = perfil.tipoCredencial;
-    if (tipo == null) {
-      throw StateError('O perfil ${perfil.rotulo} não tem cadastro aberto');
-    }
-    return tipo;
-  }
+  TipoCredencial get tipoCredencial => perfil.tipoCredencial;
 
   Credencial get credencial =>
       Credencial.criar(entrada: identificador, senha: senha);
@@ -53,12 +47,30 @@ class CadastroUsuario {
     return valor == null || valor.isEmpty ? null : valor;
   }
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> get _dadosPessoais => {
     'nome': nome.trim(),
     'email': email.trim().toLowerCase(),
     if (_telefoneInformado != null) 'telefone': _telefoneInformado,
+  };
+
+  Map<String, dynamic> toJson() =>
+      perfil.coordenaPredio ? _jsonDeCoordenador() : _jsonDeUsuario();
+
+  Map<String, dynamic> _jsonDeUsuario() => {
+    ..._dadosPessoais,
     'tipoCredencial': tipoCredencial.toJson(),
     'credencial': credencial.toJson(),
-    if (perfil != Perfil.aluno) 'departamentoId': _departamentoId,
+    if (perfil.exigeDepartamento) 'departamentoId': _departamentoId,
   };
+
+  Map<String, dynamic> _jsonDeCoordenador() {
+    final credencial = this.credencial;
+
+    return {
+      ..._dadosPessoais,
+      'siape': credencial.entrada,
+      'senha': credencial.senha,
+      'departamentoId': _departamentoId,
+    };
+  }
 }

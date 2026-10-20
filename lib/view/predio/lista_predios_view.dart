@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/services/services_predio.dart';
-import 'package:reserva_if/view/predio/salas_do_predio_view.dart';
 import 'package:reserva_if/view/predio/widgets/card_predio.dart';
+import 'package:reserva_if/view/reserva/agendamento_view.dart';
 import 'package:reserva_if/view/widgets/app_bar_padrao.dart';
 import 'package:reserva_if/view/widgets/corpo_com_estado.dart';
 import 'package:reserva_if/view/widgets/estados.dart';
@@ -32,10 +32,10 @@ class _ListaPrediosViewState extends State<ListaPrediosView> {
     super.dispose();
   }
 
-  void _abrirSalas(Predio predio) {
+  void _abrirAgendamento(Predio predio) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => SalasDoPredioView(predio: predio),
+        builder: (_) => AgendamentoView(predio: predio),
       ),
     );
   }
@@ -43,7 +43,7 @@ class _ListaPrediosViewState extends State<ListaPrediosView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarPadrao(titulo: 'Agendamentos'),
+      appBar: const AppBarPadrao(titulo: 'Prédios'),
       body: ListenableBuilder(
         listenable: _viewModel,
         builder: (context, _) => RefreshIndicator(
@@ -60,7 +60,7 @@ class _ListaPrediosViewState extends State<ListaPrediosView> {
             ),
             construirConteudo: (_) => _ListaDePredios(
               predios: _viewModel.predios,
-              aoSelecionar: _abrirSalas,
+              aoSelecionar: _abrirAgendamento,
             ),
           ),
         ),

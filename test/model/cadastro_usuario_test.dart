@@ -12,7 +12,7 @@ CadastroUsuario _cadastro(Perfil perfil, {String? telefone}) => CadastroUsuario(
   telefone: telefone,
   identificador: ' 1234567 ',
   senha: 'SenhaSegura1',
-  vinculoId: perfil == Perfil.aluno ? null : 'vinculo',
+  vinculoId: perfil.exigeDepartamento ? 'vinculo' : null,
 );
 
 void main() {
@@ -42,19 +42,26 @@ void main() {
     });
 
     test('servidores entram com SIAPE e exigem provisionamento', () {
-      for (final perfil in [Perfil.professor, Perfil.tecnico]) {
+      for (final perfil in [
+        Perfil.professor,
+        Perfil.tecnico,
+        Perfil.coordenador,
+      ]) {
         expect(perfil.identificador, TipoEntrada.siape);
         expect(perfil.exigeProvisionamento, isTrue);
-        expect(perfil.cadastroDisponivel, isTrue);
+        expect(perfil.exigeDepartamento, isTrue);
       }
       expect(Perfil.professor.tipoCredencial, TipoCredencial.siapeDocente);
       expect(Perfil.tecnico.tipoCredencial, TipoCredencial.siapeTecnico);
     });
 
-    test('coordenador ainda não tem cadastro aberto', () {
-      expect(Perfil.coordenador.tipoCredencial, isNull);
-      expect(Perfil.coordenador.cadastroDisponivel, isFalse);
-      expect(Perfil.coordenador.identificador, TipoEntrada.siape);
+    test('coordenador entra com SIAPE docente e rota própria', () {
+      expect(Perfil.coordenador.tipoCredencial, TipoCredencial.siapeDocente);
+      expect(Perfil.coordenador.coordenaPredio, isTrue);
+    });
+
+    test('aluno não exige departamento', () {
+      expect(Perfil.aluno.exigeDepartamento, isFalse);
     });
   });
 
@@ -90,8 +97,46 @@ void main() {
       expect(json.containsKey('telefone'), isFalse);
     });
 
-    test('coordenador não serializa', () {
-      expect(() => _cadastro(Perfil.coordenador).toJson(), throwsStateError);
+    test('coordenador segue o CadastroCoordenadorInput', () {
+      const cadastro = CadastroUsuario(
+        perfil: Perfil.coordenador,
+        nome: ' Roberto Lima ',
+        email: 'Roberto@IFES.edu.br',
+        identificador: ' 1765432 ',
+        senha: 'SenhaSegura1',
+        telefone: ' (27) 98888-3333 ',
+        vinculoId: '64b7f0c2a1b2c3d4e5f60103',
+      );
+
+      expect(cadastro.toJson(), {
+        'nome': 'Roberto Lima',
+        'email': 'roberto@ifes.edu.br',
+        'telefone': '(27) 98888-3333',
+        'siape': '1765432',
+        'senha': 'SenhaSegura1',
+        'departamentoId': '64b7f0c2a1b2c3d4e5f60103',
+      });
+    });
+
+    test('coordenador não envia prédio, portaria nem credencial', () {
+      final json = _cadastro(Perfil.coordenador).toJson();
+
+      expect(json.containsKey('predioId'), isFalse);
+      expect(json.containsKey('numeroPortaria'), isFalse);
+      expect(json.containsKey('credencial'), isFalse);
+      expect(json.containsKey('tipoCredencial'), isFalse);
+    });
+
+    test('coordenador sem departamento falha alto ao serializar', () {
+      const cadastro = CadastroUsuario(
+        perfil: Perfil.coordenador,
+        nome: 'Roberto Lima',
+        email: 'roberto@ifes.edu.br',
+        identificador: '1765432',
+        senha: 'SenhaSegura1',
+      );
+
+      expect(cadastro.toJson, throwsStateError);
     });
 
     test('a credencial é a mesma do login, com matrícula normalizada', () {

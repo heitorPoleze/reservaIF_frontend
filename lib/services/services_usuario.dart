@@ -1,6 +1,7 @@
 import 'package:reserva_if/model/usuario/cadastro_usuario.dart';
 import 'package:reserva_if/model/usuario/departamento_elegivel.dart';
 import 'package:reserva_if/model/usuario/perfil_usuario.dart';
+import 'package:reserva_if/model/usuario/servidor_resumo.dart';
 import 'package:reserva_if/services/http/ambiente.dart';
 import 'package:reserva_if/services/http/requisicao_http.dart';
 import 'package:reserva_if/services/services_base.dart';
@@ -30,14 +31,15 @@ class ServicesUsuario extends BaseService {
   Future<String> cadastrar(CadastroUsuario cadastro) {
     return executarRequisicao(
       requisicao: RequisicaoHttp.post(
-        rota(),
+        rota(cadastro.perfil.coordenaPredio ? 'coordenadores' : ''),
         corpo: cadastro.toJson(),
         cabecalhos: _cabecalhosDoCadastro(cadastro),
       ),
       aoSucesso: (resposta) =>
           extrairObjeto(resposta.bodyBytes, (json) => json['uuid'] as String),
       errosPorStatus: {
-        403: 'Cadastro de servidor não autorizado: chave de '
+        403:
+            'Cadastro de servidor não autorizado: chave de '
             'provisionamento ausente ou inválida.',
       },
       erroMsg: 'Não foi possível concluir o cadastro.',
@@ -53,6 +55,17 @@ class ServicesUsuario extends BaseService {
       errosPorStatus: {404: 'Perfil não encontrado.'},
       erroMsg: 'Não foi possível carregar o seu perfil.',
       acao: 'carregar o perfil',
+    );
+  }
+
+  Future<List<ServidorResumo>> buscarServidores() {
+    return executarRequisicao(
+      requisicao: RequisicaoHttp.get(rota('servidores')),
+      aoSucesso: (resposta) =>
+          extrairLista(resposta.bodyBytes, ServidorResumo.fromJson),
+      aoListaVazia: () => const <ServidorResumo>[],
+      erroMsg: 'Erro ao buscar os servidores.',
+      acao: 'buscar os servidores',
     );
   }
 
