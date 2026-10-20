@@ -17,11 +17,11 @@ enum Perfil {
   final int nivelAcesso;
 
   TipoCredencial? get tipoCredencial => switch (this) {
-        Perfil.aluno => TipoCredencial.matriculaAluno,
-        Perfil.professor => TipoCredencial.siapeDocente,
-        Perfil.tecnico => TipoCredencial.siapeTecnico,
-        Perfil.coordenador => null,
-      };
+    Perfil.aluno => TipoCredencial.matriculaAluno,
+    Perfil.professor => TipoCredencial.siapeDocente,
+    Perfil.tecnico => TipoCredencial.siapeTecnico,
+    Perfil.coordenador => null,
+  };
 
   TipoEntrada get identificador =>
       this == Perfil.aluno ? TipoEntrada.matricula : TipoEntrada.siape;
@@ -29,8 +29,6 @@ enum Perfil {
   bool get cadastroDisponivel => tipoCredencial != null;
 
   bool get exigeProvisionamento => tipoCredencial?.ehServidor ?? true;
-
-  bool get vinculaCurso => this == Perfil.aluno;
 
   bool get podeAprovar => this == Perfil.coordenador;
 

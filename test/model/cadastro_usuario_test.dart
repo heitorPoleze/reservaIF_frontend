@@ -5,16 +5,15 @@ import 'package:reserva_if/model/usuario/departamento_elegivel.dart';
 import 'package:reserva_if/model/usuario/perfil.dart';
 import 'package:reserva_if/model/usuario/tipo_credencial.dart';
 
-CadastroUsuario _cadastro(Perfil perfil, {String? telefone}) =>
-    CadastroUsuario(
-      perfil: perfil,
-      nome: '  Ana Souza ',
-      email: ' Ana@IFES.edu.br ',
-      telefone: telefone,
-      identificador: ' 1234567 ',
-      senha: 'SenhaSegura1',
-      vinculoId: 'vinculo',
-    );
+CadastroUsuario _cadastro(Perfil perfil, {String? telefone}) => CadastroUsuario(
+  perfil: perfil,
+  nome: '  Ana Souza ',
+  email: ' Ana@IFES.edu.br ',
+  telefone: telefone,
+  identificador: ' 1234567 ',
+  senha: 'SenhaSegura1',
+  vinculoId: perfil == Perfil.aluno ? null : 'vinculo',
+);
 
 void main() {
   group('TipoCredencial', () {
@@ -36,9 +35,8 @@ void main() {
   });
 
   group('Perfil no cadastro', () {
-    test('aluno entra com matrícula e se vincula a curso', () {
+    test('aluno entra com matrícula sem vínculo a curso', () {
       expect(Perfil.aluno.identificador, TipoEntrada.matricula);
-      expect(Perfil.aluno.vinculaCurso, isTrue);
       expect(Perfil.aluno.exigeProvisionamento, isFalse);
       expect(Perfil.aluno.tipoCredencial, TipoCredencial.matriculaAluno);
     });
@@ -46,7 +44,6 @@ void main() {
     test('servidores entram com SIAPE e exigem provisionamento', () {
       for (final perfil in [Perfil.professor, Perfil.tecnico]) {
         expect(perfil.identificador, TipoEntrada.siape);
-        expect(perfil.vinculaCurso, isFalse);
         expect(perfil.exigeProvisionamento, isTrue);
         expect(perfil.cadastroDisponivel, isTrue);
       }
@@ -62,7 +59,7 @@ void main() {
   });
 
   group('CadastroUsuario.toJson', () {
-    test('aluno segue CadastroUsuarioInput com cursoId', () {
+    test('aluno não envia cursoId', () {
       expect(_cadastro(Perfil.aluno).toJson(), {
         'nome': 'Ana Souza',
         'email': 'ana@ifes.edu.br',
@@ -72,13 +69,14 @@ void main() {
           'entrada': '1234567',
           'senha': 'SenhaSegura1',
         },
-        'cursoId': 'vinculo',
       });
     });
 
     test('servidor manda departamentoId e telefone quando informado', () {
-      final json =
-          _cadastro(Perfil.tecnico, telefone: ' (27) 99999-0000 ').toJson();
+      final json = _cadastro(
+        Perfil.tecnico,
+        telefone: ' (27) 99999-0000 ',
+      ).toJson();
 
       expect(json['tipoCredencial'], 'SIAPE_TECNICO');
       expect(json['departamentoId'], 'vinculo');
@@ -103,7 +101,6 @@ void main() {
         email: 'bia@ifes.edu.br',
         identificador: '20241TSI0063',
         senha: 'SenhaSegura1',
-        vinculoId: 'curso-si',
       );
 
       expect(cadastro.toJson()['credencial'], cadastro.credencial.toJson());
@@ -117,7 +114,6 @@ void main() {
         email: 'bia@ifes.edu.br',
         identificador: 'abc',
         senha: 'SenhaSegura1',
-        vinculoId: 'curso-si',
       );
 
       expect(cadastro.toJson, throwsArgumentError);

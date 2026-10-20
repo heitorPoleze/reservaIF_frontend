@@ -31,7 +31,7 @@ class CadastroViewModel extends ChangeNotifier
   String? get mensagemErroVinculos => _cargaDepartamentos.mensagemErro;
 
   List<DepartamentoElegivel> get opcoesDeVinculo => _departamentos
-      .where((item) => item.ehCoordenadoriaDeCurso == _perfil.vinculaCurso)
+      .where((item) => !item.ehCoordenadoriaDeCurso)
       .toList(growable: false);
 
   Future<void> carregarDepartamentos() {
@@ -47,7 +47,7 @@ class CadastroViewModel extends ChangeNotifier
   void selecionarPerfil(Perfil novo) {
     if (novo == _perfil) return;
 
-    if (novo.vinculaCurso != _perfil.vinculaCurso) _vinculoId = null;
+    if (novo == Perfil.aluno || _perfil == Perfil.aluno) _vinculoId = null;
     _perfil = novo;
     notificarSeVivo();
   }
@@ -65,7 +65,10 @@ class CadastroViewModel extends ChangeNotifier
     required String senha,
   }) async {
     final vinculo = _vinculoId;
-    if (isLoading || !podeEnviar || vinculo == null) return false;
+    final cadastroDeServidor = _perfil != Perfil.aluno;
+    if (isLoading || !podeEnviar || (cadastroDeServidor && vinculo == null)) {
+      return false;
+    }
 
     final cadastro = CadastroUsuario(
       perfil: _perfil,
@@ -74,7 +77,7 @@ class CadastroViewModel extends ChangeNotifier
       telefone: telefone,
       identificador: identificador,
       senha: senha,
-      vinculoId: vinculo,
+      vinculoId: cadastroDeServidor ? vinculo : null,
     );
 
     return cargaPrincipal.executar(

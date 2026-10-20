@@ -80,9 +80,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
     }
 
     final entrou = await context.read<SessaoViewModel>().entrar(
-          entrada: _identificadorController.text,
-          senha: _senhaController.text,
-        );
+      entrada: _identificadorController.text,
+      senha: _senhaController.text,
+    );
 
     if (!mounted || entrou) return;
 
@@ -140,7 +140,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
                               const _DivisorDeSecao(),
                               _SecaoVinculo(
                                 viewModel: _viewModel,
-                                identificadorController: _identificadorController,
+                                identificadorController:
+                                    _identificadorController,
                                 habilitado: !ocupado,
                               ),
                               const _DivisorDeSecao(),
@@ -153,8 +154,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
                               BotaoPadrao(
                                 texto: 'Criar conta',
                                 carregando: ocupado,
-                                aoPressionar:
-                                    _viewModel.podeEnviar ? _cadastrar : null,
+                                aoPressionar: _viewModel.podeEnviar
+                                    ? _cadastrar
+                                    : null,
                               ),
                             ],
                           ),
@@ -222,11 +224,11 @@ class _SecaoConta extends StatelessWidget {
   });
 
   static IconData _iconeDe(Perfil perfil) => switch (perfil) {
-        Perfil.aluno => Icons.school_outlined,
-        Perfil.professor => Icons.co_present_outlined,
-        Perfil.tecnico => Icons.badge_outlined,
-        Perfil.coordenador => Icons.verified_user_outlined,
-      };
+    Perfil.aluno => Icons.school_outlined,
+    Perfil.professor => Icons.co_present_outlined,
+    Perfil.tecnico => Icons.badge_outlined,
+    Perfil.coordenador => Icons.verified_user_outlined,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -328,7 +330,10 @@ class _SecaoVinculo extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        tituloDeSecaoFormulario(context, 'Vínculo com o Ifes'),
+        tituloDeSecaoFormulario(
+          context,
+          viewModel.perfil == Perfil.aluno ? 'Matrícula' : 'Vínculo com o Ifes',
+        ),
         AnimatedSize(
           duration: duracao,
           curve: Curves.easeOutCubic,
@@ -342,7 +347,7 @@ class _SecaoVinculo extends StatelessWidget {
               children: [...anteriores, ?atual],
             ),
             child: _CamposDoVinculo(
-              key: ValueKey(viewModel.perfil.vinculaCurso),
+              key: ValueKey(viewModel.perfil == Perfil.aluno),
               viewModel: viewModel,
               identificadorController: identificadorController,
               habilitado: habilitado,
@@ -352,7 +357,8 @@ class _SecaoVinculo extends StatelessWidget {
         if (!viewModel.podeEnviar) ...[
           const SizedBox(height: AppEstilos.espacoEntreCampos),
           const CaixaAviso.informacao(
-            mensagem: 'O cadastro de coordenação ainda não está disponível. '
+            mensagem:
+                'O cadastro de coordenação ainda não está disponível. '
                 'Ele será liberado assim que a instituição abrir esse acesso.',
           ),
         ],
@@ -388,13 +394,16 @@ class _CamposDoVinculo extends StatelessWidget {
               ? 'Como aparece no seu comprovante'
               : 'Somente números',
           habilitado: habilitado,
-          tipoDeTeclado:
-              ehMatricula ? TextInputType.text : TextInputType.number,
+          tipoDeTeclado: ehMatricula
+              ? TextInputType.text
+              : TextInputType.number,
           acaoDoTeclado: TextInputAction.next,
           validador: Validator.validarIdentificador(identificador),
         ),
-        const SizedBox(height: AppEstilos.espacoEntreCampos),
-        _SeletorDeVinculo(viewModel: viewModel, habilitado: habilitado),
+        if (viewModel.perfil != Perfil.aluno) ...[
+          const SizedBox(height: AppEstilos.espacoEntreCampos),
+          _SeletorDeVinculo(viewModel: viewModel, habilitado: habilitado),
+        ],
       ],
     );
   }
@@ -408,7 +417,7 @@ class _SeletorDeVinculo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rotulo = viewModel.perfil.vinculaCurso ? 'Curso' : 'Departamento';
+    const rotulo = 'Departamento';
     final erro = viewModel.mensagemErroVinculos;
 
     if (erro != null) {

@@ -11,13 +11,13 @@ import 'package:reserva_if/services/services_usuario.dart';
 import 'mock_http.dart';
 
 CadastroUsuario _cadastro(Perfil perfil) => CadastroUsuario(
-      perfil: perfil,
-      nome: 'Ana Souza',
-      email: 'ana@ifes.edu.br',
-      identificador: '1234567',
-      senha: 'SenhaSegura1',
-      vinculoId: 'curso-agronomia',
-    );
+  perfil: perfil,
+  nome: 'Ana Souza',
+  email: 'ana@ifes.edu.br',
+  identificador: '1234567',
+  senha: 'SenhaSegura1',
+  vinculoId: perfil == Perfil.aluno ? null : 'curso-agronomia',
+);
 
 Map<String, dynamic> _corpo(http.Request requisicao) =>
     jsonDecode(requisicao.body) as Map<String, dynamic>;
@@ -76,15 +76,15 @@ void main() {
   });
 
   group('cadastrar', () {
-    test('aluno vai sem chave de provisionamento e com cursoId', () async {
+    test('aluno vai sem chave de provisionamento nem cursoId', () async {
       http.Request? enviada;
 
       final uuid = await comRespostaFixa(
         () => service.cadastrar(_cadastro(Perfil.aluno)),
-        respostaJson(
-          {'uuid': '64b7f0c2a1b2c3d4e5f60222', 'nivelAcesso': 0},
-          201,
-        ),
+        respostaJson({
+          'uuid': '64b7f0c2a1b2c3d4e5f60222',
+          'nivelAcesso': 0,
+        }, 201),
         capturar: (requisicao) => enviada = requisicao,
       );
 
@@ -92,12 +92,14 @@ void main() {
       expect(enviada!.method, 'POST');
       expect(enviada!.url.path, endsWith('/usuarios'));
       expect(
-        enviada!.headers
-            .containsKey(ServicesUsuario.cabecalhoDeProvisionamento),
+        enviada!.headers.containsKey(
+          ServicesUsuario.cabecalhoDeProvisionamento,
+        ),
         isFalse,
       );
       expect(_corpo(enviada!)['tipoCredencial'], 'MATRICULA_ALUNO');
-      expect(_corpo(enviada!)['cursoId'], 'curso-agronomia');
+      expect(_corpo(enviada!).containsKey('cursoId'), isFalse);
+      expect(_corpo(enviada!).containsKey('departamentoId'), isFalse);
     });
 
     test('professor leva a chave e o departamentoId', () async {
@@ -122,15 +124,17 @@ void main() {
       http.Request? enviada;
 
       await comRespostaFixa(
-        () => ServicesUsuario(chaveDeProvisionamento: '')
-            .cadastrar(_cadastro(Perfil.tecnico)),
+        () => ServicesUsuario(
+          chaveDeProvisionamento: '',
+        ).cadastrar(_cadastro(Perfil.tecnico)),
         respostaJson({'uuid': 'x', 'nivelAcesso': 3}, 201),
         capturar: (requisicao) => enviada = requisicao,
       );
 
       expect(
-        enviada!.headers
-            .containsKey(ServicesUsuario.cabecalhoDeProvisionamento),
+        enviada!.headers.containsKey(
+          ServicesUsuario.cabecalhoDeProvisionamento,
+        ),
         isFalse,
       );
     });

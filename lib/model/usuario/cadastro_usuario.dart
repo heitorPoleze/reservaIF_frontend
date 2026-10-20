@@ -10,7 +10,7 @@ class CadastroUsuario {
     this.telefone,
     required this.identificador,
     required this.senha,
-    required this.vinculoId,
+    this.vinculoId,
   });
 
   final Perfil perfil;
@@ -25,7 +25,7 @@ class CadastroUsuario {
 
   final String senha;
 
-  final String vinculoId;
+  final String? vinculoId;
 
   bool get exigeProvisionamento => perfil.exigeProvisionamento;
 
@@ -40,7 +40,13 @@ class CadastroUsuario {
   Credencial get credencial =>
       Credencial.criar(entrada: identificador, senha: senha);
 
-  String get _chaveDoVinculo => perfil.vinculaCurso ? 'cursoId' : 'departamentoId';
+  String get _departamentoId {
+    final id = vinculoId;
+    if (id == null) {
+      throw StateError('Selecione um departamento para o cadastro.');
+    }
+    return id;
+  }
 
   String? get _telefoneInformado {
     final valor = telefone?.trim();
@@ -48,11 +54,11 @@ class CadastroUsuario {
   }
 
   Map<String, dynamic> toJson() => {
-        'nome': nome.trim(),
-        'email': email.trim().toLowerCase(),
-        if (_telefoneInformado != null) 'telefone': _telefoneInformado,
-        'tipoCredencial': tipoCredencial.toJson(),
-        'credencial': credencial.toJson(),
-        _chaveDoVinculo: vinculoId,
-      };
+    'nome': nome.trim(),
+    'email': email.trim().toLowerCase(),
+    if (_telefoneInformado != null) 'telefone': _telefoneInformado,
+    'tipoCredencial': tipoCredencial.toJson(),
+    'credencial': credencial.toJson(),
+    if (perfil != Perfil.aluno) 'departamentoId': _departamentoId,
+  };
 }

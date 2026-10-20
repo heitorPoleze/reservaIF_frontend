@@ -37,32 +37,31 @@ class ServicesUsuarioFalso extends ServicesUsuario {
 }
 
 Future<bool> _cadastrar(CadastroViewModel viewModel) => viewModel.cadastrar(
-      nome: 'Ana Souza',
-      email: 'ana@ifes.edu.br',
-      telefone: '',
-      identificador: '1234567',
-      senha: 'SenhaSegura1',
-    );
+  nome: 'Ana Souza',
+  email: 'ana@ifes.edu.br',
+  telefone: '',
+  identificador: '1234567',
+  senha: 'SenhaSegura1',
+);
 
 void main() {
   test('opções de vínculo seguem o perfil', () async {
     final viewModel = CadastroViewModel(service: ServicesUsuarioFalso());
     await viewModel.carregarDepartamentos();
 
+    expect(viewModel.opcoesDeVinculo.map((item) => item.id), ['biblioteca']);
+
     expect(
       viewModel.opcoesDeVinculo.map((item) => item.id),
-      ['curso-agronomia'],
+      isNot(contains('curso-agronomia')),
     );
-
-    viewModel.selecionarPerfil(Perfil.professor);
-
-    expect(viewModel.opcoesDeVinculo.map((item) => item.id), ['biblioteca']);
   });
 
-  test('trocar de aluno para servidor limpa o vínculo', () {
+  test('trocar para aluno limpa o vínculo de departamento', () {
     final viewModel = CadastroViewModel(service: ServicesUsuarioFalso())
-      ..selecionarVinculo('curso-agronomia')
-      ..selecionarPerfil(Perfil.tecnico);
+      ..selecionarPerfil(Perfil.professor)
+      ..selecionarVinculo('biblioteca')
+      ..selecionarPerfil(Perfil.aluno);
 
     expect(viewModel.vinculoId, isNull);
   });
@@ -87,19 +86,20 @@ void main() {
     expect(service.enviados, isEmpty);
   });
 
-  test('cadastro de aluno monta o model com o vínculo escolhido', () async {
+  test('cadastro de aluno não exige nem envia vínculo de curso', () async {
     final service = ServicesUsuarioFalso();
-    final viewModel = CadastroViewModel(service: service)
-      ..selecionarVinculo('curso-agronomia');
+    final viewModel = CadastroViewModel(service: service);
 
     expect(await _cadastrar(viewModel), isTrue);
     expect(service.enviados.single.perfil, Perfil.aluno);
-    expect(service.enviados.single.vinculoId, 'curso-agronomia');
+    expect(service.enviados.single.vinculoId, isNull);
+    expect(service.enviados.single.toJson().containsKey('cursoId'), isFalse);
   });
 
   test('falha na carga do catálogo fica no erro dos vínculos', () async {
-    final viewModel =
-        CadastroViewModel(service: ServicesUsuarioFalso(falharCarga: true));
+    final viewModel = CadastroViewModel(
+      service: ServicesUsuarioFalso(falharCarga: true),
+    );
 
     await viewModel.carregarDepartamentos();
 
