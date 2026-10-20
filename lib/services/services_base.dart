@@ -267,10 +267,10 @@ abstract class BaseService {
           throw ApiValidationException([fallbackMsg, ...mensagens]);
         }
 
-        final mensagemDoBackend = jsonResponse['error'] ??
-            jsonResponse['erro'] ??
-            jsonResponse['mensagem'] ??
-            jsonResponse['message'];
+        final mensagemDoBackend = jsonResponse['mensagem'] ??
+            jsonResponse['message'] ??
+            jsonResponse['error'] ??
+            jsonResponse['erro'];
 
         if (mensagemDoBackend != null) {
           throw ApiException('$fallbackMsg\n$mensagemDoBackend');

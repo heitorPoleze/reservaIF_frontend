@@ -8,7 +8,7 @@ abstract class Usuario {
   const Usuario({
     this.id,
     required this.nome,
-    required this.email,
+    this.email,
     this.telefone,
     required this.perfil,
   });
@@ -16,14 +16,14 @@ abstract class Usuario {
   Usuario.deJson(Map<String, dynamic> json, this.perfil)
       : id = json['id'] as String?,
         nome = json['nome'] as String,
-        email = json['email'] as String,
+        email = json['email'] as String?,
         telefone = json['telefone'] as String?;
 
   final String? id;
 
   final String nome;
 
-  final String email;
+  final String? email;
 
   final String? telefone;
 
@@ -41,7 +41,7 @@ abstract class Usuario {
 
   Map<String, dynamic> toJson() => {
         'nome': nome,
-        'email': email,
+        if (email != null) 'email': email,
         if (telefone != null) 'telefone': telefone,
         'perfil': perfil.toJson(),
       };

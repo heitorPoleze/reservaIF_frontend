@@ -6,7 +6,7 @@ class Coordenacao extends Usuario {
   const Coordenacao({
     super.id,
     required super.nome,
-    required super.email,
+    super.email,
     super.telefone,
     this.coordenador,
     required this.departamento,

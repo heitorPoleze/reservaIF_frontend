@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:reserva_if/model/usuario/credencial/tipo_entrada.dart';
+import 'package:reserva_if/model/usuario/departamento_elegivel.dart';
+import 'package:reserva_if/model/usuario/perfil.dart';
+import 'package:reserva_if/services/services_usuario.dart';
 import 'package:reserva_if/utils/validator.dart';
+import 'package:reserva_if/view/theme/app_estilos.dart';
 import 'package:reserva_if/view/widgets/botao_padrao.dart';
+import 'package:reserva_if/view/widgets/caixa_aviso.dart';
+import 'package:reserva_if/view/widgets/campo_selecao.dart';
+import 'package:reserva_if/view/widgets/campo_texto.dart';
+import 'package:reserva_if/view/widgets/campos_formulario.dart';
+import 'package:reserva_if/view/widgets/feedback_usuario.dart';
+import 'package:reserva_if/view/widgets/formulario/validacao_formulario.dart';
 import 'package:reserva_if/view/widgets/reserva_if_logo.dart';
-
-enum NivelAcesso { aluno, professor, coordenador }
+import 'package:reserva_if/view/widgets/scaffold_de_autenticacao.dart';
+import 'package:reserva_if/viewmodel/usuario/cadastro_viewmodel.dart';
 
 class TelaCadastro extends StatefulWidget {
   final VoidCallback? aoCadastrar;
@@ -16,243 +27,123 @@ class TelaCadastro extends StatefulWidget {
 
 class _TelaCadastroState extends State<TelaCadastro> {
   final _chaveDoFormulario = GlobalKey<FormState>();
-  final _matriculaController = TextEditingController();
+  final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _telefoneController = TextEditingController();
+  final _identificadorController = TextEditingController();
+  final _senhaController = TextEditingController();
+  late final _viewModel = CadastroViewModel(service: ServicesUsuario());
 
-  String? _departamento;
-
-  static const List<String> _departamentos = [
-    'Informática',
-    'Administração',
-    'Agropecuária',
-    'Biologia',
-    'Matemática',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _viewModel.carregarDepartamentos();
+  }
 
   @override
   void dispose() {
-    _matriculaController.dispose();
+    _nomeController.dispose();
     _emailController.dispose();
     _telefoneController.dispose();
+    _identificadorController.dispose();
+    _senhaController.dispose();
+    _viewModel.dispose();
     super.dispose();
   }
 
-  void _cadastrar() {
-    if (_chaveDoFormulario.currentState?.validate() ?? false) {
-      if (widget.aoCadastrar != null) {
-        widget.aoCadastrar!.call();
-        return;
-      }
-
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(content: Text('Cadastro realizado com sucesso.')),
-        );
+  void _selecionarPerfil(Perfil? perfil) {
+    if (perfil == null) return;
+    if (perfil.identificador != _viewModel.perfil.identificador) {
+      _identificadorController.clear();
     }
+    _viewModel.selecionarPerfil(perfil);
   }
 
-  InputDecoration _decoracao({String? hint}) {
-    return InputDecoration(hintText: hint);
-  }
+  Future<void> _cadastrar() async {
+    if (!validarRevelandoCampoInvalido(_chaveDoFormulario)) return;
 
-  Widget _rotulo(BuildContext context, String texto) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(texto, style: Theme.of(context).textTheme.titleSmall),
+    final cadastrou = await _viewModel.cadastrar(
+      nome: _nomeController.text,
+      email: _emailController.text,
+      telefone: _telefoneController.text,
+      identificador: _identificadorController.text,
+      senha: _senhaController.text,
     );
-  }
 
-  Widget _campo({
-    required BuildContext context,
-    required String rotulo,
-    required TextEditingController controller,
-    TextInputType teclado = TextInputType.text,
-    String? Function(String?)? validador,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _rotulo(context, rotulo),
-        TextFormField(
-          controller: controller,
-          keyboardType: teclado,
-          textInputAction: TextInputAction.next,
-          decoration: _decoracao(),
-          validator:
-              validador ??
-              (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Campo obrigatório' : null,
-        ),
-      ],
-    );
-  }
+    if (!mounted) return;
 
-  Widget _opcaoNivel(
-    String texto,
-    NivelAcesso valor,
-    VoidCallback aoSelecionar,
-  ) {
-    return InkWell(
-      onTap: aoSelecionar,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: Radio<NivelAcesso>(
-              value: valor,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(texto),
-        ],
-      ),
-    );
+    final mensagemErro = _viewModel.mensagemErro;
+    if (!cadastrou) {
+      if (mensagemErro != null) mostrarErro(context, mensagemErro);
+      return;
+    }
+
+    mostrarSucesso(context, 'Conta criada. Entre com seus dados.');
+    final aoCadastrar = widget.aoCadastrar;
+    if (aoCadastrar != null) {
+      aoCadastrar();
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final esquema = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      backgroundColor: esquema.surfaceContainerLow,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
+    return ScaffoldDeAutenticacao(
+      corpo: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            AppEstilos.espacoPagina,
+            8,
+            AppEstilos.espacoPagina,
+            32,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: ListenableBuilder(
+              listenable: _viewModel,
+              builder: (context, _) => Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 150,
-                    height: 150,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: esquema.surface,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: const ReservaIfLogo(width: 122, height: 122),
-                  ),
-                  const SizedBox(height: 16),
+                  const _CabecalhoDoCadastro(),
+                  const SizedBox(height: 24),
                   Card(
-                    color: esquema.surface,
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
                       child: Form(
                         key: _chaveDoFormulario,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _campo(
-                              context: context,
-                              rotulo: 'Matrícula/SIAPE',
-                              controller: _matriculaController,
-                              validador: Validator.validarEntradaDeLogin,
+                            _SecaoConta(
+                              perfil: _viewModel.perfil,
+                              habilitado: !_viewModel.isLoading,
+                              aoSelecionar: _selecionarPerfil,
                             ),
-                            const SizedBox(height: 20),
-                            _campo(
-                              context: context,
-                              rotulo: 'Email',
-                              controller: _emailController,
-                              teclado: TextInputType.emailAddress,
-                              validador: Validator.validarEmail,
+                            const _DivisorDeSecao(),
+                            _SecaoDadosPessoais(
+                              nomeController: _nomeController,
+                              emailController: _emailController,
+                              telefoneController: _telefoneController,
+                              habilitado: !_viewModel.isLoading,
                             ),
-                            const SizedBox(height: 20),
-                            _campo(
-                              context: context,
-                              rotulo: 'Telefone',
-                              controller: _telefoneController,
-                              teclado: TextInputType.phone,
-                              validador: Validator.validarTelefone,
+                            const _DivisorDeSecao(),
+                            _SecaoVinculo(
+                              viewModel: _viewModel,
+                              identificadorController: _identificadorController,
                             ),
-                            const SizedBox(height: 20),
-                            FormField<NivelAcesso>(
-                              validator: (value) =>
-                                  Validator.selecaoObrigatoria(value),
-                              builder: (campo) => Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _rotulo(context, 'Nível de Acesso'),
-                                  RadioGroup<NivelAcesso>(
-                                    groupValue: campo.value,
-                                    onChanged: (value) {
-                                      if (value != null) campo.didChange(value);
-                                    },
-                                    child: Wrap(
-                                      spacing: 12,
-                                      runSpacing: 8,
-                                      children: [
-                                        _opcaoNivel(
-                                          'Aluno',
-                                          NivelAcesso.aluno,
-                                          () => campo.didChange(
-                                            NivelAcesso.aluno,
-                                          ),
-                                        ),
-                                        _opcaoNivel(
-                                          'Professor',
-                                          NivelAcesso.professor,
-                                          () => campo.didChange(
-                                            NivelAcesso.professor,
-                                          ),
-                                        ),
-                                        _opcaoNivel(
-                                          'Coordenador',
-                                          NivelAcesso.coordenador,
-                                          () => campo.didChange(
-                                            NivelAcesso.coordenador,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (campo.hasError)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Text(
-                                        campo.errorText!,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(color: esquema.error),
-                                      ),
-                                    ),
-                                ],
-                              ),
+                            const _DivisorDeSecao(),
+                            _SecaoAcesso(
+                              senhaController: _senhaController,
+                              habilitado: !_viewModel.isLoading,
+                              aoConcluir: _cadastrar,
                             ),
-                            const SizedBox(height: 20),
-                            _rotulo(context, 'Departamento'),
-                            DropdownButtonFormField<String>(
-                              initialValue: _departamento,
-                              isExpanded: true,
-                              validator: Validator.selecaoObrigatoria,
-                              decoration: _decoracao(hint: 'Selecionar'),
-                              items: _departamentos
-                                  .map(
-                                    (departamento) => DropdownMenuItem(
-                                      value: departamento,
-                                      child: Text(departamento),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() => _departamento = value);
-                              },
-                            ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 28),
                             BotaoPadrao(
-                              texto: 'Cadastrar',
-                              aoPressionar: _cadastrar,
-                              corDeFundo: esquema.primary,
-                              corDoConteudo: esquema.onPrimary,
+                              texto: 'Criar conta',
+                              carregando: _viewModel.isLoading,
+                              aoPressionar:
+                                  _viewModel.podeEnviar ? _cadastrar : null,
                             ),
                           ],
                         ),
@@ -267,5 +158,318 @@ class _TelaCadastroState extends State<TelaCadastro> {
       ),
     );
   }
+}
 
+class _CabecalhoDoCadastro extends StatelessWidget {
+  const _CabecalhoDoCadastro();
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+
+    return Column(
+      children: [
+        Container(
+          width: 88,
+          height: 88,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: tema.colorScheme.surface,
+            borderRadius: BorderRadius.circular(AppEstilos.raioCartao),
+          ),
+          child: const ReservaIfLogo(width: 68, height: 68),
+        ),
+        const SizedBox(height: 16),
+        Text('Criar conta', style: tema.textTheme.headlineSmall),
+      ],
+    );
+  }
+}
+
+class _DivisorDeSecao extends StatelessWidget {
+  const _DivisorDeSecao();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 24),
+      child: Divider(height: 1),
+    );
+  }
+}
+
+class _SecaoConta extends StatelessWidget {
+  final Perfil perfil;
+  final bool habilitado;
+  final ValueChanged<Perfil?> aoSelecionar;
+
+  const _SecaoConta({
+    required this.perfil,
+    required this.habilitado,
+    required this.aoSelecionar,
+  });
+
+  static IconData _iconeDe(Perfil perfil) => switch (perfil) {
+        Perfil.aluno => Icons.school_outlined,
+        Perfil.professor => Icons.co_present_outlined,
+        Perfil.tecnico => Icons.badge_outlined,
+        Perfil.coordenador => Icons.verified_user_outlined,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CampoSelecao<Perfil>(
+          rotulo: 'Conta',
+          valor: perfil,
+          opcoes: Perfil.values,
+          rotuloDe: (opcao) => opcao.rotulo,
+          iconeDe: _iconeDe,
+          habilitado: habilitado,
+          validador: Validator.selecaoObrigatoria,
+          aoMudar: aoSelecionar,
+        ),
+        const SizedBox(height: 8),
+        dicaDeSeletor(
+          context,
+          'Você vai entrar com seu ${perfil.identificador.rotulo}.',
+        ),
+      ],
+    );
+  }
+}
+
+class _SecaoDadosPessoais extends StatelessWidget {
+  final TextEditingController nomeController;
+  final TextEditingController emailController;
+  final TextEditingController telefoneController;
+  final bool habilitado;
+
+  const _SecaoDadosPessoais({
+    required this.nomeController,
+    required this.emailController,
+    required this.telefoneController,
+    required this.habilitado,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        tituloDeSecaoFormulario(context, 'Seus dados'),
+        CampoTexto(
+          rotulo: 'Nome completo',
+          controller: nomeController,
+          habilitado: habilitado,
+          capitalizacao: TextCapitalization.words,
+          acaoDoTeclado: TextInputAction.next,
+          validador: Validator.validarNome,
+        ),
+        const SizedBox(height: AppEstilos.espacoEntreCampos),
+        CampoTexto(
+          rotulo: 'E-mail',
+          controller: emailController,
+          dica: 'nome@ifes.edu.br',
+          habilitado: habilitado,
+          tipoDeTeclado: TextInputType.emailAddress,
+          acaoDoTeclado: TextInputAction.next,
+          validador: Validator.validarEmailObrigatorio,
+        ),
+        const SizedBox(height: AppEstilos.espacoEntreCampos),
+        CampoTexto(
+          rotulo: 'Telefone',
+          controller: telefoneController,
+          dica: '(27) 99999-0000',
+          opcional: true,
+          habilitado: habilitado,
+          tipoDeTeclado: TextInputType.phone,
+          acaoDoTeclado: TextInputAction.next,
+          validador: Validator.validarTelefone,
+        ),
+      ],
+    );
+  }
+}
+
+class _SecaoVinculo extends StatelessWidget {
+  final CadastroViewModel viewModel;
+  final TextEditingController identificadorController;
+
+  const _SecaoVinculo({
+    required this.viewModel,
+    required this.identificadorController,
+  });
+
+  static const _duracaoDaTroca = Duration(milliseconds: 200);
+
+  @override
+  Widget build(BuildContext context) {
+    final duracao = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : _duracaoDaTroca;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        tituloDeSecaoFormulario(context, 'Vínculo com o Ifes'),
+        AnimatedSize(
+          duration: duracao,
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
+            duration: duracao,
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            layoutBuilder: (atual, anteriores) => Stack(
+              alignment: Alignment.topCenter,
+              children: [...anteriores, ?atual],
+            ),
+            child: _CamposDoVinculo(
+              key: ValueKey(viewModel.perfil.vinculaCurso),
+              viewModel: viewModel,
+              identificadorController: identificadorController,
+            ),
+          ),
+        ),
+        if (!viewModel.podeEnviar) ...[
+          const SizedBox(height: AppEstilos.espacoEntreCampos),
+          const CaixaAviso.informacao(
+            mensagem: 'O cadastro de coordenação ainda não está disponível. '
+                'Ele será liberado assim que a instituição abrir esse acesso.',
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _CamposDoVinculo extends StatelessWidget {
+  final CadastroViewModel viewModel;
+  final TextEditingController identificadorController;
+
+  const _CamposDoVinculo({
+    super.key,
+    required this.viewModel,
+    required this.identificadorController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final identificador = viewModel.perfil.identificador;
+    final ehMatricula = identificador == TipoEntrada.matricula;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CampoTexto(
+          rotulo: identificador.rotulo,
+          controller: identificadorController,
+          dica: ehMatricula
+              ? 'Como aparece no seu comprovante'
+              : 'Somente números',
+          habilitado: !viewModel.isLoading,
+          tipoDeTeclado:
+              ehMatricula ? TextInputType.text : TextInputType.number,
+          acaoDoTeclado: TextInputAction.next,
+          validador: Validator.validarIdentificador(identificador),
+        ),
+        const SizedBox(height: AppEstilos.espacoEntreCampos),
+        _SeletorDeVinculo(viewModel: viewModel),
+      ],
+    );
+  }
+}
+
+class _SeletorDeVinculo extends StatelessWidget {
+  final CadastroViewModel viewModel;
+
+  const _SeletorDeVinculo({required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
+    final rotulo = viewModel.perfil.vinculaCurso ? 'Curso' : 'Departamento';
+    final erro = viewModel.mensagemErroVinculos;
+
+    if (erro != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          rotuloDeCampo(context, rotulo),
+          CaixaAviso(
+            mensagem: erro,
+            acao: BotaoDeTexto(
+              texto: 'Tentar de novo',
+              aoPressionar: viewModel.carregarDepartamentos,
+            ),
+          ),
+        ],
+      );
+    }
+
+    final carregando = viewModel.isCarregandoVinculos;
+
+    return CampoSelecao<DepartamentoElegivel>(
+      key: ValueKey(carregando),
+      rotulo: rotulo,
+      valor: _selecionado,
+      opcoes: viewModel.opcoesDeVinculo,
+      rotuloDe: (opcao) => opcao.rotuloDeVinculo,
+      dica: carregando ? 'Carregando…' : 'Selecione',
+      habilitado: !viewModel.isLoading && !carregando,
+      validador: Validator.selecaoObrigatoria,
+      aoMudar: (opcao) => viewModel.selecionarVinculo(opcao?.id),
+    );
+  }
+
+  DepartamentoElegivel? get _selecionado {
+    final id = viewModel.vinculoId;
+    for (final opcao in viewModel.opcoesDeVinculo) {
+      if (opcao.id == id) return opcao;
+    }
+    return null;
+  }
+}
+
+class _SecaoAcesso extends StatelessWidget {
+  final TextEditingController senhaController;
+  final bool habilitado;
+  final VoidCallback aoConcluir;
+
+  const _SecaoAcesso({
+    required this.senhaController,
+    required this.habilitado,
+    required this.aoConcluir,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        tituloDeSecaoFormulario(context, 'Acesso'),
+        CampoTexto(
+          rotulo: 'Senha',
+          controller: senhaController,
+          dica: 'Mínimo de ${Validator.minimoCaracteresSenha} caracteres',
+          ehSenha: true,
+          habilitado: habilitado,
+          acaoDoTeclado: TextInputAction.next,
+          validador: Validator.validarSenha,
+        ),
+        const SizedBox(height: AppEstilos.espacoEntreCampos),
+        CampoTexto(
+          rotulo: 'Confirmar senha',
+          ehSenha: true,
+          habilitado: habilitado,
+          acaoDoTeclado: TextInputAction.done,
+          validador: (valor) =>
+              Validator.validarConfirmacaoSenha(valor, senhaController.text),
+          aoSubmeter: (_) => aoConcluir(),
+        ),
+      ],
+    );
+  }
 }

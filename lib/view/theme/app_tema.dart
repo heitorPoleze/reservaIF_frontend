@@ -13,8 +13,8 @@ abstract final class AppTema {
       onPrimaryContainer: AppCores.sobreAcao,
       secondary: AppCores.acento,
       onSecondary: AppCores.sobreAcento,
-      secondaryContainer: AppCores.acento,
-      onSecondaryContainer: AppCores.sobreAcento,
+      secondaryContainer: AppCores.indicadorCasca,
+      onSecondaryContainer: AppCores.textoPrimario,
       error: AppCores.erro,
       onError: AppCores.sobreAcao,
       surface: AppCores.superficie,
@@ -106,16 +106,17 @@ abstract final class AppTema {
     elevation: 3,
     scrolledUnderElevation: 3,
     centerTitle: false,
-    systemOverlayStyle: barraDeStatusSobreEscuro,
+    systemOverlayStyle: barraDeStatusSobreClaro,
     titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
   );
 
   static final _navegacao = NavigationBarThemeData(
     backgroundColor: AppCores.casca,
     surfaceTintColor: Colors.transparent,
-    indicatorColor: AppCores.sobreCasca.withValues(alpha: 0.24),
+    indicatorColor: AppCores.indicadorCasca,
     indicatorShape: const StadiumBorder(),
-    elevation: 0,
+    shadowColor: AppCores.sombraChrome,
+    elevation: 3,
     height: 70,
     labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
     labelTextStyle: WidgetStateProperty.resolveWith((estados) {
@@ -411,8 +412,8 @@ abstract final class AppTema {
   static final _seletorDeData = DatePickerThemeData(
     backgroundColor: AppCores.superficie,
     surfaceTintColor: Colors.transparent,
-    headerBackgroundColor: AppCores.casca,
-    headerForegroundColor: AppCores.sobreCasca,
+    headerBackgroundColor: AppCores.acao,
+    headerForegroundColor: AppCores.sobreAcao,
     todayForegroundColor: WidgetStateProperty.resolveWith((estados) {
       if (estados.contains(WidgetState.selected)) return AppCores.sobreAcao;
       if (estados.contains(WidgetState.disabled)) return AppCores.textoInativo;

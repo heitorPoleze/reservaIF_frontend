@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../model/usuario/credencial/tipo_entrada.dart';
 import '../model/usuario/matricula.dart';
 import '../model/usuario/siape.dart';
@@ -8,6 +10,8 @@ class Validator {
   static const int maximoCaracteresNome = 100;
 
   static const int minimoCaracteresSenha = 8;
+
+  static const int maximoBytesSenha = 72;
 
   static const int minimoCaracteresDescricao = 3;
 
@@ -37,19 +41,22 @@ class Validator {
       valor == null ? 'Obrigatório' : null;
 
   static String? validarEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'O e-mail é obrigatório';
-    }
+    if (value == null || value.trim().isEmpty) return null;
     if (!emailValido(value)) {
       return 'Digite um e-mail válido';
     }
     return null;
   }
 
-  static String? validarTelefone(String? value) {
+  static String? validarEmailObrigatorio(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'O telefone é obrigatório';
+      return 'O e-mail é obrigatório';
     }
+    return validarEmail(value);
+  }
+
+  static String? validarTelefone(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
     if (!RegExp(r'^[\d\s()+-]+$').hasMatch(value.trim())) {
       return 'Informe um telefone válido com DDD';
     }
@@ -82,6 +89,12 @@ class Validator {
     return null;
   }
 
+  static String? Function(String?) validarIdentificador(TipoEntrada tipo) =>
+      switch (tipo) {
+        TipoEntrada.matricula => validarMatricula,
+        TipoEntrada.siape => validarSiape,
+      };
+
   static String? validarEntradaDeLogin(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Informe sua matrícula ou SIAPE';
@@ -108,6 +121,9 @@ class Validator {
     }
     if (_regexEmoji.hasMatch(value)) {
       return 'A senha não pode conter emojis';
+    }
+    if (utf8.encode(value).length > maximoBytesSenha) {
+      return 'A senha está longa demais';
     }
     return null;
   }

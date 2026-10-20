@@ -5,7 +5,7 @@ class Professor extends Servidor {
   const Professor({
     super.id,
     required super.nome,
-    required super.email,
+    super.email,
     super.telefone,
     required super.departamento,
     required super.siape,
