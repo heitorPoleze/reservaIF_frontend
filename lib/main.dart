@@ -5,9 +5,10 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:reserva_if/services/http/ambiente.dart';
 import 'package:reserva_if/services/services_base.dart';
+import 'package:reserva_if/view/telas/tela_inicial.dart';
+import 'package:reserva_if/view/telas/tela_login.dart';
+import 'package:reserva_if/view/telas/tela_cadastro.dart';
 import 'package:reserva_if/view/theme/app_tema.dart';
-import 'package:reserva_if/view/widgets/app_bar_padrao.dart';
-import 'package:reserva_if/view/widgets/estados.dart';
 import 'package:reserva_if/view/widgets/tela_sem_conexao.dart';
 import 'package:reserva_if/viewmodel/status_de_conexao.dart';
 
@@ -43,7 +44,7 @@ class ReservaIfApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'reservaIF',
+      title: 'ReservaIF',
       theme: AppTema.claro,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -52,21 +53,23 @@ class ReservaIfApp extends StatelessWidget {
       ],
       supportedLocales: const [Locale('pt', 'BR')],
       builder: (context, child) => GuardaDeConexao(filho: child!),
-      home: const TelaInicialProvisoria(),
-    );
-  }
-}
-
-class TelaInicialProvisoria extends StatelessWidget {
-  const TelaInicialProvisoria({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBarPadrao(titulo: 'reservaIF'),
-      body: EstadoVazio(
-        icone: Icons.meeting_room_outlined,
-        mensagem: 'Estrutura base pronta. As telas de domínio entram aqui.',
+      home: Builder(
+        builder: (context) => TelaInicialDeslogada(
+          aoEntrar: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const TelaLogin(),
+              ),
+            );
+          },
+          aoCadastrar: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const TelaCadastro(),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

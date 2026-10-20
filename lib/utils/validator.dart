@@ -46,6 +46,22 @@ class Validator {
     return null;
   }
 
+  static String? validarTelefone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'O telefone é obrigatório';
+    }
+    if (!RegExp(r'^[\d\s()+-]+$').hasMatch(value.trim())) {
+      return 'Informe um telefone válido com DDD';
+    }
+
+    final digitos = value.replaceAll(RegExp(r'\D'), '');
+    if (digitos.length != 10 && digitos.length != 11) {
+      return 'Informe um telefone válido com DDD';
+    }
+
+    return null;
+  }
+
   static String? validarSiape(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'O SIAPE é obrigatório';

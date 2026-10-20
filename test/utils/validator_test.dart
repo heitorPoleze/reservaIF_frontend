@@ -31,6 +31,17 @@ void main() {
     });
   });
 
+  group('validarTelefone', () {
+    test('exige um telefone com DDD e aceita formatação comum', () {
+      expect(Validator.validarTelefone(null), 'O telefone é obrigatório');
+      expect(Validator.validarTelefone('   '), 'O telefone é obrigatório');
+      expect(Validator.validarTelefone('(27) 99999-0000'), isNull);
+      expect(Validator.validarTelefone('2733330000'), isNull);
+      expect(Validator.validarTelefone('abc27999990000'), isNotNull);
+      expect(Validator.validarTelefone('99999-0000'), isNotNull);
+    });
+  });
+
   group('validarSiape', () {
     test('aceita 6 ou 7 dígitos e rejeita o resto', () {
       expect(Validator.validarSiape('123456'), isNull);
@@ -46,7 +57,10 @@ void main() {
       expect(Validator.validarMatricula('20241tsi0063'), isNull);
       expect(Validator.validarMatricula('20241TSI0063'), isNull);
       expect(Validator.validarMatricula(null), 'A matrícula é obrigatória');
-      expect(Validator.validarMatricula('1234567'), 'Informe uma matrícula válida');
+      expect(
+        Validator.validarMatricula('1234567'),
+        'Informe uma matrícula válida',
+      );
     });
   });
 
@@ -57,7 +71,10 @@ void main() {
     });
 
     test('rejeita em branco e formato desconhecido', () {
-      expect(Validator.validarEntradaDeLogin('  '), 'Informe sua matrícula ou SIAPE');
+      expect(
+        Validator.validarEntradaDeLogin('  '),
+        'Informe sua matrícula ou SIAPE',
+      );
       expect(
         Validator.validarEntradaDeLogin('a@ifes.edu.br'),
         'Informe uma matrícula ou um SIAPE válidos',
