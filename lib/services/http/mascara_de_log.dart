@@ -8,6 +8,8 @@ class MascaraDeLog {
     'cookie',
     'email',
     'siape',
+    'matricula',
+    'entrada',
   };
 
   static const _chavesSensiveis = {'authorization'};

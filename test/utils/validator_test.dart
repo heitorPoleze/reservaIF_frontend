@@ -31,6 +31,40 @@ void main() {
     });
   });
 
+  group('validarSiape', () {
+    test('aceita 6 ou 7 dígitos e rejeita o resto', () {
+      expect(Validator.validarSiape('123456'), isNull);
+      expect(Validator.validarSiape('1234567'), isNull);
+      expect(Validator.validarSiape(''), 'O SIAPE é obrigatório');
+      expect(Validator.validarSiape('12345'), 'Informe um SIAPE válido');
+      expect(Validator.validarSiape('20241tsi0063'), 'Informe um SIAPE válido');
+    });
+  });
+
+  group('validarMatricula', () {
+    test('aceita o formato ano+semestre+curso+sequencial', () {
+      expect(Validator.validarMatricula('20241tsi0063'), isNull);
+      expect(Validator.validarMatricula('20241TSI0063'), isNull);
+      expect(Validator.validarMatricula(null), 'A matrícula é obrigatória');
+      expect(Validator.validarMatricula('1234567'), 'Informe uma matrícula válida');
+    });
+  });
+
+  group('validarEntradaDeLogin', () {
+    test('aceita matrícula ou SIAPE', () {
+      expect(Validator.validarEntradaDeLogin('1234567'), isNull);
+      expect(Validator.validarEntradaDeLogin(' 20241tsi0063 '), isNull);
+    });
+
+    test('rejeita em branco e formato desconhecido', () {
+      expect(Validator.validarEntradaDeLogin('  '), 'Informe sua matrícula ou SIAPE');
+      expect(
+        Validator.validarEntradaDeLogin('a@ifes.edu.br'),
+        'Informe uma matrícula ou um SIAPE válidos',
+      );
+    });
+  });
+
   group('validarSenha', () {
     test('exige o mínimo de caracteres', () {
       expect(Validator.validarSenha('1234567'), isNotNull);

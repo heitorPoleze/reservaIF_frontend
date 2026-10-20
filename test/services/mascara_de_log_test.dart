@@ -21,6 +21,18 @@ void main() {
     expect(resultado['siape'], '<oculto: 7 caracteres>');
   });
 
+  test('matricula e entrada de login mantêm só o tamanho', () {
+    final resultado = mascarar({
+      'matricula': '20241tsi0063',
+      'entrada': '123456',
+      'tipoEntrada': 'SIAPE',
+    });
+
+    expect(resultado['matricula'], '<oculto: 12 caracteres>');
+    expect(resultado['entrada'], '<oculto: 6 caracteres>');
+    expect(resultado['tipoEntrada'], '<oculto: 5 caracteres>');
+  });
+
   test('campos comuns passam intactos e null não é ocultado', () {
     final resultado = mascarar({'nome': 'Sala', 'email': null});
 

@@ -10,6 +10,8 @@ final _dataExtensa = DateFormat("d 'de' MMMM 'de' y", 'pt_BR');
 
 final _dataComDiaDaSemana = DateFormat('EEEE, dd/MM/yyyy', 'pt_BR');
 
+final _diaDaSemana = DateFormat.EEEE('pt_BR');
+
 final _mesAno = DateFormat.yMMMM('pt_BR');
 
 final _mesAbreviado = DateFormat.MMM('pt_BR');
@@ -27,6 +29,9 @@ String formatarDataExtensa(DateTime data) => _dataExtensa.format(data);
 
 String formatarDataComDiaDaSemana(DateTime data) =>
     capitalizar(_dataComDiaDaSemana.format(data));
+
+String formatarDiaDaSemana(DateTime data) =>
+    capitalizar(_diaDaSemana.format(data));
 
 String formatarMesAnoExtenso(DateTime data) =>
     capitalizar(_mesAno.format(data));

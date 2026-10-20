@@ -1,3 +1,50 @@
-- pegar paleta de cores 
+- coordenacao deve pegar o objeto completo de coordenador
 
-- 
+- pegar paleta de cores
+
+- logo do app está em assets/images/logo.jpg 
+
+Desenvolva as views da camada de apresentação para duas telas do aplicativo: a Página Inicial (Deslogado) e a Página de Login. Não fixe cores pois irei alterar a paleta depois. As duas telas possuem um fundo preenchido por uma cor de Fundo e compartilham o mesmo Logo. Crie um widget separado para o espaço da logo (logo do app está em assets/images/logo.jpg). 
+Página Inicial (Deslogada):
+Logo fica posicionado no centro-superior da tela.
+
+    Abaixo do logo, há dois botões largos com bordas arredondadas, dispostos em uma coluna:
+        Botão 1 ("Entrar"): Fundo preenchido com a Cor Primária.
+        Botão 2 ("Cadastrar"): Texto com a Cor Primária.
+    2. Página de Login:
+    Layout em coluna, com scroll (como SingleChildScrollView) para evitar overflow com o teclado.
+    O ReservaIfLogo fica na parte superior.
+    Abaixo do logo, há um Card ou Container com fundo branco (Cor de Superfície) e bordas arredondadas.
+    Dentro deste Card, há um formulário com os seguintes elementos em coluna:
+        Texto de label: "Matrícula/SIAPE".
+        Campo de texto.
+        Espaçamento.
+        Texto de label: "Senha".
+        Campo de texto
+        Botão largo escrito "Entrar"
+
+
+Implemente a sessão de acordo com o backend. Lembrando que será um app, mas pode ser usado para navegador
+
+crie a paleta de cores a partir desses códigos hexadecimais. Preferência de cores principais pelo verde suave
+7D9773
+9BBC8E
+000000
+233C37
+257364
+73817C
+E6EBE5
+B6C0B8
+E7F1EB
+C9DDD2
+233C37
+257364
+E6EBE5
+FFFFFF   
+3AA299   
+1ED83A   
+D23A3A   
+73817C   
+E7F1EB
+
+- as classes que tem associacao de outras atualmente estão conectadas por id. Você deve esperar o payload completo quando recebe ela do json. Exemplo: 

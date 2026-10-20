@@ -1,3 +1,7 @@
+import '../model/usuario/credencial/tipo_entrada.dart';
+import '../model/usuario/matricula.dart';
+import '../model/usuario/siape.dart';
+
 class Validator {
   static const int minimoCaracteresNome = 3;
 
@@ -38,6 +42,36 @@ class Validator {
     }
     if (!emailValido(value)) {
       return 'Digite um e-mail válido';
+    }
+    return null;
+  }
+
+  static String? validarSiape(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'O SIAPE é obrigatório';
+    }
+    if (!Siape.isValid(value)) {
+      return 'Informe um SIAPE válido';
+    }
+    return null;
+  }
+
+  static String? validarMatricula(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'A matrícula é obrigatória';
+    }
+    if (!Matricula.isValid(value)) {
+      return 'Informe uma matrícula válida';
+    }
+    return null;
+  }
+
+  static String? validarEntradaDeLogin(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Informe sua matrícula ou SIAPE';
+    }
+    if (TipoEntrada.inferir(value.trim()) == null) {
+      return 'Informe uma matrícula ou um SIAPE válidos';
     }
     return null;
   }
