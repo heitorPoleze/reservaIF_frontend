@@ -22,10 +22,10 @@ class NovaReservaViewModel extends ChangeNotifier
     required this._serviceUsuario,
   });
 
-  static const ordemDosResponsaveis = [
+  static const perfisDeResponsavel = [
     Perfil.coordenador,
-    Perfil.tecnico,
     Perfil.professor,
+    Perfil.tecnico,
   ];
 
   final HorarioDoDia horario;
@@ -43,7 +43,10 @@ class NovaReservaViewModel extends ChangeNotifier
 
   bool get exigeResponsavel => usuario.perfil.exigeResponsavel;
 
-  List<ServidorResumo> get servidores => _servidores;
+  List<ServidorResumo> servidoresDo(Perfil perfil) => [
+    for (final servidor in _servidores)
+      if (servidor.perfil == perfil) servidor,
+  ];
 
   ServidorResumo? get responsavel => _responsavel;
 
@@ -55,17 +58,11 @@ class NovaReservaViewModel extends ChangeNotifier
     if (!exigeResponsavel || isCarregandoServidores) return Future.value();
 
     return _cargaServidores.executar(
-      chamada: () async => _servidores = _ordenarPorPerfil(
-        await _serviceUsuario.buscarServidores(),
-      ),
+      chamada: () async =>
+          _servidores = await _serviceUsuario.buscarServidores(),
       aoFalhar: () {},
     );
   }
-
-  List<ServidorResumo> _ordenarPorPerfil(List<ServidorResumo> servidores) => [
-    for (final perfil in ordemDosResponsaveis)
-      ...servidores.where((servidor) => servidor.perfil == perfil),
-  ];
 
   void selecionarResponsavel(ServidorResumo? servidor) {
     _responsavel = servidor;

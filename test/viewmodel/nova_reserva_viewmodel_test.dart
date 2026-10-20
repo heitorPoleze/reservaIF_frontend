@@ -209,10 +209,20 @@ void main() {
 
       final enviada = service.enviadas.single;
       expect(viewModel.exigeResponsavel, isTrue);
-      expect(viewModel.servidores, [_coordenador, _tecnico, _professor]);
+      expect(viewModel.servidoresDo(Perfil.coordenador), [_coordenador]);
+      expect(viewModel.servidoresDo(Perfil.professor), [_professor]);
+      expect(viewModel.servidoresDo(Perfil.tecnico), [_tecnico]);
       expect(enviada.solicitante.id, 'a1');
       expect(enviada.responsavel.id, 's2');
       expect(enviada.toJson()['responsavelId'], 's2');
+    });
+
+    test('perfis de responsável seguem a ordem das abas', () {
+      expect(NovaReservaViewModel.perfisDeResponsavel, [
+        Perfil.coordenador,
+        Perfil.professor,
+        Perfil.tecnico,
+      ]);
     });
 
     test('aluno sem responsável não chama o service', () async {
