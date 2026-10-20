@@ -13,6 +13,7 @@ import 'package:reserva_if/model/usuario/perfil_usuario.dart';
 import 'package:reserva_if/model/usuario/tipo_credencial.dart';
 import 'package:reserva_if/model/usuario/usuario_resumo.dart';
 import 'package:reserva_if/services/http/exceptions/api_exceptions.dart';
+import 'package:reserva_if/services/services_cancelamento.dart';
 import 'package:reserva_if/services/services_predio.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/utils/datas.dart';
@@ -92,14 +93,32 @@ class ServicesReservaFalso extends ServicesReserva {
   }
 }
 
+class ServicesCancelamentoFalso extends ServicesCancelamento {
+  final List<String> solicitacoes = [];
+
+  @override
+  Future<ResultadoCancelamento> solicitarHorario(
+    String idReserva,
+    String justificativa,
+  ) async {
+    solicitacoes.add('$idReserva|$justificativa');
+    return const ResultadoCancelamento(
+      solicitacaoEnviada: true,
+      mensagem: 'Solicitação enviada à coordenação.',
+    );
+  }
+}
+
 AgendamentoViewModel _viewModel({
   ServicesPredio? servicePredio,
   ServicesReserva? serviceReserva,
+  ServicesCancelamento? serviceCancelamento,
 }) => AgendamentoViewModel(
   predio: _predio,
   usuario: _usuario,
   servicePredio: servicePredio ?? ServicesPredioFalso(),
   serviceReserva: serviceReserva ?? ServicesReservaFalso(),
+  serviceCancelamento: serviceCancelamento ?? ServicesCancelamentoFalso(),
 );
 
 void main() {
@@ -187,6 +206,7 @@ void main() {
 
     final resultado = await viewModel.cancelar(
       viewModel.reservas.single,
+      ModoCancelamento.cancelar,
       '  Imprevisto  ',
     );
 
@@ -194,6 +214,29 @@ void main() {
     expect(service.cancelamentos, ['r-sA|Imprevisto']);
     expect(service.buscas, buscasAntes + 1);
     expect(viewModel.isCancelando, isFalse);
+  });
+
+  test('solicitar envia ao módulo de cancelamentos e recarrega a sala', () async {
+    final serviceReserva = ServicesReservaFalso();
+    final serviceCancelamento = ServicesCancelamentoFalso();
+    final viewModel = _viewModel(
+      serviceReserva: serviceReserva,
+      serviceCancelamento: serviceCancelamento,
+    );
+    viewModel.selecionarSala(_labA);
+    await viewModel.carregarReservas();
+    final buscasAntes = serviceReserva.buscas;
+
+    final resultado = await viewModel.cancelar(
+      viewModel.reservas.single,
+      ModoCancelamento.solicitar,
+      '  Prova prática  ',
+    );
+
+    expect(resultado!.solicitacaoEnviada, isTrue);
+    expect(serviceCancelamento.solicitacoes, ['r-sA|Prova prática']);
+    expect(serviceReserva.cancelamentos, isEmpty);
+    expect(serviceReserva.buscas, buscasAntes + 1);
   });
 
   test('modoDeCancelamento delega à regra da reserva com o usuário logado', () {

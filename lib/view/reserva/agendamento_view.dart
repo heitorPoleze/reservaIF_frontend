@@ -5,6 +5,7 @@ import 'package:reserva_if/model/reserva/horario_do_dia.dart';
 import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/sala/sala.dart';
+import 'package:reserva_if/services/services_cancelamento.dart';
 import 'package:reserva_if/services/services_predio.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/view/reserva/nova_reserva_view.dart';
@@ -38,6 +39,7 @@ class _AgendamentoViewState extends State<AgendamentoView> {
     usuario: context.read<SessaoViewModel>().usuario!,
     servicePredio: ServicesPredio(),
     serviceReserva: ServicesReserva(),
+    serviceCancelamento: ServicesCancelamento(),
   );
 
   @override
@@ -105,14 +107,17 @@ class _AgendamentoViewState extends State<AgendamentoView> {
     );
     if (justificativa == null || !mounted) return;
 
-    final resultado = await _viewModel.cancelar(reserva, justificativa);
+    final resultado = await _viewModel.cancelar(
+      reserva,
+      modo,
+      justificativa,
+    );
     if (!mounted) return;
 
     if (resultado == null) {
       mostrarErro(
         context,
-        _viewModel.mensagemErroCancelamento ??
-            'Não foi possível cancelar a reserva.',
+        _viewModel.mensagemErroCancelamento ?? modo.falhaPadrao,
       );
     } else if (resultado.solicitacaoEnviada) {
       mostrarInfo(context, resultado.mensagem);

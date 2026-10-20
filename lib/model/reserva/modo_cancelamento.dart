@@ -5,14 +5,16 @@ enum ModoCancelamento {
     explicacao: 'O horário volta a ficar livre e a reserva segue no '
         'histórico como cancelada.',
     dicaJustificativa: 'Por que a reserva está sendo cancelada?',
+    falhaPadrao: 'Não foi possível cancelar a reserva.',
   ),
   solicitar(
     rotuloAcao: 'Solicitar Horário',
     tituloConfirmacao: 'Solicitar horário?',
-    explicacao: 'A coordenação do departamento do responsável vai avaliar '
-        'o cancelamento da reserva do aluno. Ela continua ativa até a '
-        'decisão, e o horário não fica reservado para você.',
+    explicacao: 'A coordenação vai avaliar o pedido. A reserva do aluno '
+        'continua ativa até a decisão; se aprovada, ela é cancelada e o '
+        'horário passa a ser reservado em seu nome.',
     dicaJustificativa: 'Por que você precisa deste horário?',
+    falhaPadrao: 'Não foi possível solicitar o horário.',
   );
 
   const ModoCancelamento({
@@ -20,6 +22,7 @@ enum ModoCancelamento {
     required this.tituloConfirmacao,
     required this.explicacao,
     required this.dicaJustificativa,
+    required this.falhaPadrao,
   });
 
   final String rotuloAcao;
@@ -29,4 +32,6 @@ enum ModoCancelamento {
   final String explicacao;
 
   final String dicaJustificativa;
+
+  final String falhaPadrao;
 }

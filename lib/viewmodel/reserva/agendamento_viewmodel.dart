@@ -6,6 +6,7 @@ import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/resultado_cancelamento.dart';
 import 'package:reserva_if/model/sala/sala.dart';
 import 'package:reserva_if/model/usuario/perfil_usuario.dart';
+import 'package:reserva_if/services/services_cancelamento.dart';
 import 'package:reserva_if/services/services_predio.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/utils/datas.dart';
@@ -20,12 +21,14 @@ class AgendamentoViewModel extends ChangeNotifier
     required this.usuario,
     required this._servicePredio,
     required this._serviceReserva,
+    required this._serviceCancelamento,
   });
 
   final Predio predio;
   final PerfilUsuario usuario;
   final ServicesPredio _servicePredio;
   final ServicesReserva _serviceReserva;
+  final ServicesCancelamento _serviceCancelamento;
 
   late final EstadoDeCarga _cargaReservas = EstadoDeCarga(
     aoMudar: notificarSeVivo,
@@ -120,14 +123,16 @@ class AgendamentoViewModel extends ChangeNotifier
 
   Future<ResultadoCancelamento?> cancelar(
     Reserva reserva,
+    ModoCancelamento modo,
     String justificativa,
   ) {
     if (isCancelando) return Future.value();
 
     return _cargaCancelamento.executar(
       chamada: () async {
-        final resultado = await _serviceReserva.cancelar(
+        final resultado = await _enviarCancelamento(
           reserva.id!,
+          modo,
           justificativa.trim(),
         );
         await carregarReservas();
@@ -136,4 +141,19 @@ class AgendamentoViewModel extends ChangeNotifier
       aoFalhar: () => null,
     );
   }
+
+  Future<ResultadoCancelamento> _enviarCancelamento(
+    String idReserva,
+    ModoCancelamento modo,
+    String justificativa,
+  ) => switch (modo) {
+    ModoCancelamento.cancelar => _serviceReserva.cancelar(
+      idReserva,
+      justificativa,
+    ),
+    ModoCancelamento.solicitar => _serviceCancelamento.solicitarHorario(
+      idReserva,
+      justificativa,
+    ),
+  };
 }
