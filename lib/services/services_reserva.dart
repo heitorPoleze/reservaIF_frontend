@@ -19,6 +19,28 @@ class ServicesReserva extends BaseService {
     );
   }
 
+  Future<List<Reserva>> buscarSolicitadas() {
+    return executarRequisicao(
+      requisicao: RequisicaoHttp.get(rota('minhas')),
+      aoSucesso: (resposta) =>
+          extrairLista(resposta.bodyBytes, Reserva.fromJson),
+      aoListaVazia: () => const <Reserva>[],
+      erroMsg: 'Erro ao buscar os agendamentos solicitados.',
+      acao: 'buscar os agendamentos solicitados',
+    );
+  }
+
+  Future<List<Reserva>> buscarSobMinhaResponsabilidade() {
+    return executarRequisicao(
+      requisicao: RequisicaoHttp.get(rota('responsavel')),
+      aoSucesso: (resposta) =>
+          extrairLista(resposta.bodyBytes, Reserva.fromJson),
+      aoListaVazia: () => const <Reserva>[],
+      erroMsg: 'Erro ao buscar os agendamentos sob sua responsabilidade.',
+      acao: 'buscar os agendamentos sob sua responsabilidade',
+    );
+  }
+
   Future<ResultadoCriacaoReserva> solicitar(Reserva reserva) {
     return executarRequisicao(
       requisicao: RequisicaoHttp.post(rota(''), corpo: reserva.toJson()),

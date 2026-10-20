@@ -125,32 +125,70 @@ void main() {
     });
   });
 
-  group('solicitar', () {
-    test('envia o POST com finalidade vazia e lê as reservas criadas', () async {
+  group('listas do perfil', () {
+    test('busca agendamentos solicitados na rota minhas', () async {
       http.Request? enviada;
 
-      final resultado = await comRespostaFixa(
-        () => service.solicitar(_novaReserva()),
-        respostaJson({
-          'serieRecorrencia': null,
-          'reservas': [_reservaJson],
-        }, 201),
+      final reservas = await comRespostaFixa(
+        service.buscarSolicitadas,
+        respostaJson([_reservaJson], 200),
         capturar: (requisicao) => enviada = requisicao,
       );
 
-      expect(enviada!.method, 'POST');
-      expect(enviada!.url.path, endsWith('/reservas'));
-      expect(jsonDecode(enviada!.body), {
-        'salaId': '64b7f0c2a1b2c3d4e5f60111',
-        'responsavelId': '64b7f0c2a1b2c3d4e5f60222',
-        'dataHoraInicio': '2026-11-10T13:00:00.000Z',
-        'dataHoraFim': '2026-11-10T13:50:00.000Z',
-        'finalidade': '',
-      });
-      expect(resultado.serieRecorrencia, isNull);
-      expect(resultado.reservas.single.id, '64b7f0c2a1b2c3d4e5f60718');
-      expect(resultado.aguardaAprovacao, isFalse);
+      expect(enviada!.method, 'GET');
+      expect(enviada!.url.path, endsWith('/reservas/minhas'));
+      expect(enviada!.url.queryParameters, isEmpty);
+      expect(reservas.single.finalidade, 'Monitoria de Algoritmos');
     });
+
+    test(
+      'busca agendamentos sob responsabilidade na rota responsavel',
+      () async {
+        http.Request? enviada;
+
+        final reservas = await comRespostaFixa(
+          service.buscarSobMinhaResponsabilidade,
+          respostaJson([_reservaJson], 200),
+          capturar: (requisicao) => enviada = requisicao,
+        );
+
+        expect(enviada!.method, 'GET');
+        expect(enviada!.url.path, endsWith('/reservas/responsavel'));
+        expect(enviada!.url.queryParameters, isEmpty);
+        expect(reservas.single.finalidade, 'Monitoria de Algoritmos');
+      },
+    );
+  });
+
+  group('solicitar', () {
+    test(
+      'envia o POST com finalidade vazia e lê as reservas criadas',
+      () async {
+        http.Request? enviada;
+
+        final resultado = await comRespostaFixa(
+          () => service.solicitar(_novaReserva()),
+          respostaJson({
+            'serieRecorrencia': null,
+            'reservas': [_reservaJson],
+          }, 201),
+          capturar: (requisicao) => enviada = requisicao,
+        );
+
+        expect(enviada!.method, 'POST');
+        expect(enviada!.url.path, endsWith('/reservas'));
+        expect(jsonDecode(enviada!.body), {
+          'salaId': '64b7f0c2a1b2c3d4e5f60111',
+          'responsavelId': '64b7f0c2a1b2c3d4e5f60222',
+          'dataHoraInicio': '2026-11-10T13:00:00.000Z',
+          'dataHoraFim': '2026-11-10T13:50:00.000Z',
+          'finalidade': '',
+        });
+        expect(resultado.serieRecorrencia, isNull);
+        expect(resultado.reservas.single.id, '64b7f0c2a1b2c3d4e5f60718');
+        expect(resultado.aguardaAprovacao, isFalse);
+      },
+    );
 
     test('envia as observações quando informadas', () async {
       http.Request? enviada;
