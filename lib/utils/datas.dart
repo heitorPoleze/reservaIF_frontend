@@ -50,8 +50,11 @@ DateTime? lerDataDoJson(dynamic valor) {
 
 DateTime? lerInstanteDoJson(dynamic valor) => lerDataDoJson(valor)?.toLocal();
 
+String _comDoisDigitos(int valor) => valor.toString().padLeft(2, '0');
+
 String dataParaJson(DateTime data) =>
-    DateTime.utc(data.year, data.month, data.day).toIso8601String();
+    '${data.year.toString().padLeft(4, '0')}'
+    '-${_comDoisDigitos(data.month)}-${_comDoisDigitos(data.day)}';
 
 String instanteParaJson(DateTime instante) =>
     instante.toUtc().toIso8601String();

@@ -43,7 +43,7 @@ class ReservaIfApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'reservaIF',
+      title: 'ReservaIF',
       theme: AppTema.claro,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -63,7 +63,7 @@ class TelaInicialProvisoria extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      appBar: AppBarPadrao(titulo: 'reservaIF'),
+      appBar: AppBarPadrao(titulo: 'ReservaIF'),
       body: EstadoVazio(
         icone: Icons.meeting_room_outlined,
         mensagem: 'Estrutura base pronta. As telas de domínio entram aqui.',

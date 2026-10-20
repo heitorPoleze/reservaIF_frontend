@@ -1,30 +1,4 @@
-- coordenacao deve pegar o objeto completo de coordenador
-
-- pegar paleta de cores
-
-- logo do app está em assets/images/logo.jpg 
-
-Desenvolva as views da camada de apresentação para duas telas do aplicativo: a Página Inicial (Deslogado) e a Página de Login. Não fixe cores pois irei alterar a paleta depois. As duas telas possuem um fundo preenchido por uma cor de Fundo e compartilham o mesmo Logo. Crie um widget separado para o espaço da logo (logo do app está em assets/images/logo.jpg). 
-Página Inicial (Deslogada):
-Logo fica posicionado no centro-superior da tela.
-
-    Abaixo do logo, há dois botões largos com bordas arredondadas, dispostos em uma coluna:
-        Botão 1 ("Entrar"): Fundo preenchido com a Cor Primária.
-        Botão 2 ("Cadastrar"): Texto com a Cor Primária.
-    2. Página de Login:
-    Layout em coluna, com scroll (como SingleChildScrollView) para evitar overflow com o teclado.
-    O ReservaIfLogo fica na parte superior.
-    Abaixo do logo, há um Card ou Container com fundo branco (Cor de Superfície) e bordas arredondadas.
-    Dentro deste Card, há um formulário com os seguintes elementos em coluna:
-        Texto de label: "Matrícula/SIAPE".
-        Campo de texto.
-        Espaçamento.
-        Texto de label: "Senha".
-        Campo de texto
-        Botão largo escrito "Entrar"
-
-
-Implemente a sessão de acordo com o backend. Lembrando que será um app, mas pode ser usado para navegador
+- implemente a tela inicial de agendamento conforme exemplo \assets\images\prints_figma\telaInicioAgendamento.png. Implemente junto o widget do footer, que terá as sessões Agendamentos (substituindo reservas) e perfil. Quando a conta não for de aluno, deve ter a sessão Pendências. O footer está em images\prints_figma\footer.png. Os cards são os prédios. Ou seja: o app, quando o usuário está logado, abre nessa tela. Logo, terá que fazer a requisição dos prédios e transformá-los em cards futuramente.
 
 crie a paleta de cores a partir desses códigos hexadecimais. Preferência de cores principais pelo verde suave
 7D9773
@@ -47,4 +21,10 @@ D23A3A
 73817C   
 E7F1EB
 
-- as classes que tem associacao de outras atualmente estão conectadas por id. Você deve esperar o payload completo quando recebe ela do json. Exemplo: 
+
+TELAS FORA DO FIGMA:
+- todos podem visualizar na agenda os horários reservados na agenda(em horários do dia). clicando no horários do dia, aparece um popup com os detalhes da reserva. Todos visualizam, mas o COORDENADOR pode cancelar
+
+- tela de perfil
+
+- buildar app

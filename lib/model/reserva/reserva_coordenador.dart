@@ -1,62 +1,65 @@
-import 'frequencia.dart';
+import '../sala/sala.dart';
+import '../usuario/usuario_resumo.dart';
+import 'cancelamento.dart';
+import 'regra_recorrencia.dart';
 import 'reserva.dart';
+import 'serie_recorrencia.dart';
 import 'status_reserva.dart';
+import 'tipo_recorrencia.dart';
 
 class ReservaCoordenador extends Reserva {
   ReservaCoordenador({
     super.id,
+    required super.sala,
+    required super.solicitante,
+    required super.responsavel,
     required super.inicio,
     required super.fim,
-    required super.salaId,
     required super.finalidade,
-    super.status,
-    required super.solicitanteId,
-    super.aprovadoPorId,
     super.observacoes,
-    super.criadoEm,
-    super.aprovadoEm,
-    required this.frequencia,
-  });
+    super.status,
+    required this.recorrencia,
+  }) : super(tipoRecorrencia: recorrencia.tipo);
 
-  ReservaCoordenador.fromJson(super.json)
-      : frequencia = Frequencia.fromJson(json['frequencia']),
-        super.fromJson();
-
-  final Frequencia frequencia;
+  final RegraRecorrencia recorrencia;
 
   @override
   ReservaCoordenador copyWith({
     String? id,
+    Sala? sala,
+    UsuarioResumo? solicitante,
+    UsuarioResumo? responsavel,
+    UsuarioResumo? analisadoPor,
+    SerieRecorrencia? serieRecorrencia,
+    TipoRecorrencia? tipoRecorrencia,
     DateTime? inicio,
     DateTime? fim,
-    String? salaId,
     String? finalidade,
-    StatusReserva? status,
-    String? solicitanteId,
-    String? aprovadoPorId,
     String? observacoes,
+    StatusReserva? status,
+    String? motivoRejeicao,
+    Cancelamento? cancelamento,
     DateTime? criadoEm,
-    DateTime? aprovadoEm,
-    Frequencia? frequencia,
+    DateTime? aceitoPeloResponsavelEm,
+    DateTime? analisadoEm,
+    RegraRecorrencia? recorrencia,
   }) =>
       ReservaCoordenador(
         id: id ?? this.id,
+        sala: sala ?? this.sala,
+        solicitante: solicitante ?? this.solicitante,
+        responsavel: responsavel ?? this.responsavel,
         inicio: inicio ?? this.inicio,
         fim: fim ?? this.fim,
-        salaId: salaId ?? this.salaId,
         finalidade: finalidade ?? this.finalidade,
-        status: status ?? this.status,
-        solicitanteId: solicitanteId ?? this.solicitanteId,
-        aprovadoPorId: aprovadoPorId ?? this.aprovadoPorId,
         observacoes: observacoes ?? this.observacoes,
-        criadoEm: criadoEm ?? this.criadoEm,
-        aprovadoEm: aprovadoEm ?? this.aprovadoEm,
-        frequencia: frequencia ?? this.frequencia,
+        status: status ?? this.status,
+        recorrencia: recorrencia ?? this.recorrencia,
       );
 
   @override
   Map<String, dynamic> toJson() => {
         ...super.toJson(),
-        'frequencia': frequencia.toJson(),
+        'recorrencia': recorrencia.toJson(),
       };
 }

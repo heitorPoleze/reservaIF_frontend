@@ -5,6 +5,7 @@ import 'package:reserva_if/model/usuario/perfil.dart';
 import 'package:reserva_if/model/usuario/professor.dart';
 import 'package:reserva_if/model/usuario/tecnico.dart';
 import 'package:reserva_if/model/usuario/usuario.dart';
+import 'package:reserva_if/model/usuario/usuario_resumo.dart';
 
 const _comum = {
   'id': 'u1',
@@ -37,7 +38,7 @@ void main() {
       );
     });
 
-    test('COORDENADOR vira Coordenacao com campos opcionais', () {
+    test('COORDENADOR vira Coordenacao sem coordenador quando ausente', () {
       final usuario = Usuario.fromJson({
         ..._comum,
         'perfil': 'COORDENADOR',
@@ -45,13 +46,49 @@ void main() {
       });
 
       expect(usuario, isA<Coordenacao>());
-      expect((usuario as Coordenacao).coordenadorId, isNull);
+      expect((usuario as Coordenacao).coordenador, isNull);
+      expect(usuario.toJson().containsKey('coordenadorId'), isFalse);
+    });
+
+    test('COORDENADOR lê o coordenador embutido e grava só o id dele', () {
+      final usuario = Usuario.fromJson({
+        ..._comum,
+        'perfil': 'COORDENADOR',
+        'departamento': 'DCC',
+        'coordenadorId': 'u9',
+        'coordenador': {'id': 'u9', 'nome': 'Carlos Lima'},
+      }) as Coordenacao;
+
+      expect(usuario.coordenador!.nome, 'Carlos Lima');
+      expect(usuario.toJson()['coordenadorId'], 'u9');
+      expect(usuario.toJson().containsKey('coordenador'), isFalse);
     });
 
     test('perfil desconhecido lança', () {
       expect(
         () => Usuario.fromJson({..._comum, 'perfil': 'VISITANTE'}),
         throwsArgumentError,
+      );
+    });
+  });
+
+  group('UsuarioResumo', () {
+    test('lê id e nome e ignora o resto', () {
+      final resumo = UsuarioResumo.fromJson({
+        'id': 'u1',
+        'nome': 'Ana Souza',
+        'emailInstitucional': 'ana@ifes.edu.br',
+      });
+
+      expect(resumo.id, 'u1');
+      expect(resumo.nome, 'Ana Souza');
+    });
+
+    test('fromJsonOpcional devolve nulo para nulo e lança sem nome', () {
+      expect(UsuarioResumo.fromJsonOpcional(null), isNull);
+      expect(
+        () => UsuarioResumo.fromJsonOpcional({'id': 'u1'}),
+        throwsA(isA<TypeError>()),
       );
     });
   });
