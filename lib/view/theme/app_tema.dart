@@ -109,7 +109,7 @@ abstract final class AppTema {
     systemOverlayStyle: barraDeStatusSobreClaro,
     titleTextStyle: TextStyle(
       color: AppCores.sobreCasca,
-      fontSize: 20,
+      fontSize: 23,
       fontWeight: FontWeight.w700,
     ),
   );

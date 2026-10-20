@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reserva_if/model/reserva/horario_do_dia.dart';
 import 'package:reserva_if/model/sala/sala.dart';
-import 'package:reserva_if/model/usuario/servidor_resumo.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/services/services_usuario.dart';
 import 'package:reserva_if/utils/validator.dart';
+import 'package:reserva_if/view/reserva/widgets/painel_selecao_responsavel.dart';
 import 'package:reserva_if/view/theme/app_estilos.dart';
 import 'package:reserva_if/view/widgets/app_bar_padrao.dart';
 import 'package:reserva_if/view/widgets/botao_padrao.dart';
+import 'package:reserva_if/view/widgets/campo_abre_painel.dart';
 import 'package:reserva_if/view/widgets/campo_texto.dart';
-import 'package:reserva_if/view/widgets/campo_selecao.dart';
 import 'package:reserva_if/view/widgets/cartao_entidade.dart';
 import 'package:reserva_if/view/widgets/dialogos.dart';
 import 'package:reserva_if/view/widgets/estados.dart';
@@ -178,19 +178,22 @@ class _CampoResponsavel extends StatelessWidget {
 
     final carregando = viewModel.isCarregandoServidores;
 
-    return CampoSelecao<ServidorResumo>(
-      key: ValueKey(viewModel.servidores),
+    return CampoAbrePainel(
       rotulo: 'Responsável',
       valor: viewModel.responsavel,
-      opcoes: viewModel.servidores,
       rotuloDe: (servidor) => servidor.nome,
-      iconeDe: (_) => Icons.person_outline,
-      grupoDe: (servidor) => servidor.perfil.rotulo,
+      icone: Icons.person_outline,
       dica: carregando
           ? 'Carregando servidores...'
           : 'Escolha o servidor responsável',
       validador: Validator.selecaoObrigatoria,
       habilitado: !carregando && !viewModel.isLoading,
+      abrir: (context) => escolherResponsavel(
+        context,
+        perfis: NovaReservaViewModel.perfisDeResponsavel,
+        servidoresDo: viewModel.servidoresDo,
+        selecionado: viewModel.responsavel,
+      ),
       aoMudar: viewModel.selecionarResponsavel,
     );
   }
