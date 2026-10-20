@@ -8,6 +8,7 @@ import 'package:reserva_if/services/services_base.dart';
 import 'package:reserva_if/view/telas/tela_inicial.dart';
 import 'package:reserva_if/view/telas/tela_login.dart';
 import 'package:reserva_if/view/telas/tela_cadastro.dart';
+import 'package:reserva_if/view/telas/tela_principal.dart';
 import 'package:reserva_if/view/theme/app_tema.dart';
 import 'package:reserva_if/view/widgets/tela_sem_conexao.dart';
 import 'package:reserva_if/viewmodel/status_de_conexao.dart';
@@ -58,15 +59,22 @@ class ReservaIfApp extends StatelessWidget {
           aoEntrar: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => const TelaLogin(),
+                builder: (context) => TelaLogin(
+                  aoEntrar: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const TelaPrincipal(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                ),
               ),
             );
           },
           aoCadastrar: () {
             Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const TelaCadastro(),
-              ),
+              MaterialPageRoute<void>(builder: (_) => const TelaCadastro()),
             );
           },
         ),
