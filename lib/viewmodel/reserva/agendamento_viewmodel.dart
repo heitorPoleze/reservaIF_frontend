@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/model/reserva/horario_do_dia.dart';
+import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/resultado_cancelamento.dart';
 import 'package:reserva_if/model/sala/sala.dart';
@@ -71,7 +72,8 @@ class AgendamentoViewModel extends ChangeNotifier
   String get rotuloDoDiaSelecionado =>
       formatarDiaDaSemanaEDiaDoMes(_diaSelecionado);
 
-  bool podeCancelar(Reserva reserva) => reserva.cancelavelPor(usuario);
+  ModoCancelamento? modoDeCancelamento(Reserva reserva) =>
+      reserva.modoDeCancelamentoPara(usuario);
 
   Future<void> carregarSalas() {
     if (isLoading) return Future.value();

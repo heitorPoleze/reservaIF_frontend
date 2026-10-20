@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/botao_cancelar_reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/selo_status_reserva.dart';
@@ -6,18 +7,20 @@ import 'package:reserva_if/view/widgets/cartao_entidade.dart';
 
 class PainelDetalhesReserva extends StatelessWidget {
   final Reserva reserva;
-  final bool podeCancelar;
-  final VoidCallback aoCancelar;
+  final ModoCancelamento? modoCancelamento;
+  final ValueChanged<ModoCancelamento> aoCancelar;
 
   const PainelDetalhesReserva({
     super.key,
     required this.reserva,
-    required this.podeCancelar,
+    required this.modoCancelamento,
     required this.aoCancelar,
   });
 
   @override
   Widget build(BuildContext context) {
+    final modo = modoCancelamento;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       child: Column(
@@ -30,14 +33,15 @@ class PainelDetalhesReserva extends StatelessWidget {
             acao: SeloStatusReserva(status: reserva.status),
             corpo: _linhas(),
           ),
-          if (podeCancelar) ...[
+          if (modo != null) ...[
             const SizedBox(height: 20),
             Align(
               alignment: AlignmentDirectional.centerEnd,
               child: BotaoCancelarReserva(
+                modo: modo,
                 aoPressionar: () {
                   Navigator.pop(context);
-                  aoCancelar();
+                  aoCancelar(modo);
                 },
               ),
             ),

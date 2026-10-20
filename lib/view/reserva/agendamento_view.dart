@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/model/reserva/horario_do_dia.dart';
+import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/sala/sala.dart';
 import 'package:reserva_if/services/services_predio.dart';
@@ -16,7 +17,6 @@ import 'package:reserva_if/view/theme/app_estilos.dart';
 import 'package:reserva_if/view/widgets/app_bar_padrao.dart';
 import 'package:reserva_if/view/widgets/calendario_mensal.dart';
 import 'package:reserva_if/view/widgets/campo_selecao.dart';
-import 'package:reserva_if/view/widgets/corpo_com_estado.dart';
 import 'package:reserva_if/view/widgets/estados.dart';
 import 'package:reserva_if/view/widgets/feedback_usuario.dart';
 import 'package:reserva_if/view/widgets/painel_modal.dart';
@@ -92,14 +92,17 @@ class _AgendamentoViewState extends State<AgendamentoView> {
       context: context,
       construir: (_) => PainelDetalhesReserva(
         reserva: reserva,
-        podeCancelar: _viewModel.podeCancelar(reserva),
-        aoCancelar: () => _cancelar(reserva),
+        modoCancelamento: _viewModel.modoDeCancelamento(reserva),
+        aoCancelar: (modo) => _cancelar(reserva, modo),
       ),
     );
   }
 
-  Future<void> _cancelar(Reserva reserva) async {
-    final justificativa = await pedirJustificativaDeCancelamento(context);
+  Future<void> _cancelar(Reserva reserva, ModoCancelamento modo) async {
+    final justificativa = await pedirJustificativaDeCancelamento(
+      context,
+      modo,
+    );
     if (justificativa == null || !mounted) return;
 
     final resultado = await _viewModel.cancelar(reserva, justificativa);
@@ -126,20 +129,9 @@ class _AgendamentoViewState extends State<AgendamentoView> {
         listenable: _viewModel,
         builder: (context, _) => RefreshIndicator(
           onRefresh: _viewModel.recarregar,
-          child: CorpoComEstado(
-            isLoading: _viewModel.isLoading,
-            mensagemErro: _viewModel.mensagemErro,
-            vazio: _viewModel.salas.isEmpty,
-            manterConteudoAoRecarregar: true,
-            aoTentarNovamente: _viewModel.carregarSalas,
-            construirVazio: (_) => const EstadoVazio(
-              mensagem: 'Este prédio ainda não tem salas disponíveis.',
-              icone: Icons.meeting_room_outlined,
-            ),
-            construirConteudo: (_) => _ConteudoDoAgendamento(
-              viewModel: _viewModel,
-              aoTocarHorario: _aoTocarHorario,
-            ),
+          child: _ConteudoDoAgendamento(
+            viewModel: _viewModel,
+            aoTocarHorario: _aoTocarHorario,
           ),
         ),
       ),
@@ -174,6 +166,48 @@ class _ConteudoDoAgendamento extends StatelessWidget {
           aoSelecionarDia: viewModel.selecionarDia,
         ),
         const SizedBox(height: 24),
+        _SecaoDaSala(viewModel: viewModel, aoTocarHorario: aoTocarHorario),
+      ],
+    );
+  }
+}
+
+class _SecaoDaSala extends StatelessWidget {
+  final AgendamentoViewModel viewModel;
+  final ValueChanged<HorarioDoDia> aoTocarHorario;
+
+  const _SecaoDaSala({required this.viewModel, required this.aoTocarHorario});
+
+  @override
+  Widget build(BuildContext context) {
+    final semSalas = viewModel.salas.isEmpty;
+
+    if (semSalas && viewModel.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final erro = semSalas ? viewModel.mensagemErro : null;
+
+    if (erro != null) {
+      return MensagemDeErro(
+        mensagem: erro,
+        aoTentarNovamente: viewModel.carregarSalas,
+      );
+    }
+
+    if (semSalas) {
+      return const CartaoVazio(
+        icone: Icons.meeting_room_outlined,
+        mensagem: 'Este prédio ainda não tem salas disponíveis.',
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         CampoSelecao<Sala>(
           rotulo: 'Selecionar sala',
           valor: viewModel.salaSelecionada,

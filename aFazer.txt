@@ -1,5 +1,0 @@
-para o aluno, a tela de inputs de justificativa deve aparecer selecionar responsável, que retorna 
-
-implemente os títulos em cima de cada tela (Prédios, Agendamentos)
-
-deixe a fonte dos títulos do app bar maior

@@ -46,7 +46,10 @@ class PerfilUsuario {
   String get identificadorFormatado =>
       '${perfil.identificador.rotulo} $identificador';
 
-  UsuarioResumo get resumo => UsuarioResumo(id: uuid, nome: nome);
+  bool get solicitaCancelamentoDeAluno => perfil.solicitaCancelamentoDeAluno;
+
+  UsuarioResumo get resumo =>
+      UsuarioResumo(id: uuid, nome: nome, tipoCredencial: tipoCredencial);
 
   Map<String, dynamic> toJson() => {
     'uuid': uuid,

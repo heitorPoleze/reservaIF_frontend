@@ -4,6 +4,7 @@ import '../sala/sala.dart';
 import '../usuario/perfil_usuario.dart';
 import '../usuario/usuario_resumo.dart';
 import 'cancelamento.dart';
+import 'modo_cancelamento.dart';
 import 'serie_recorrencia.dart';
 import 'status_reserva.dart';
 import 'tipo_recorrencia.dart';
@@ -145,10 +146,21 @@ class Reserva {
     return status.ocupaSala && !agora.isBefore(inicio) && agora.isBefore(fim);
   }
 
-  bool cancelavelPor(PerfilUsuario usuario, {DateTime? agora}) =>
-      !status.terminal &&
-      (agora ?? DateTime.now()).isBefore(inicio) &&
-      (usuario.podeAprovar || solicitante.id == usuario.uuid);
+  ModoCancelamento? modoDeCancelamentoPara(
+    PerfilUsuario usuario, {
+    DateTime? agora,
+  }) {
+    if (status.terminal || !(agora ?? DateTime.now()).isBefore(inicio)) {
+      return null;
+    }
+    if (usuario.podeAprovar || solicitante.id == usuario.uuid) {
+      return ModoCancelamento.cancelar;
+    }
+    if (usuario.solicitaCancelamentoDeAluno && solicitante.ehAluno) {
+      return ModoCancelamento.solicitar;
+    }
+    return null;
+  }
 
   bool conflitaCom(Reserva outra) =>
       sala.id == outra.sala.id &&

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/model/reserva/dia_semana.dart';
+import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
 import 'package:reserva_if/model/reserva/regra_recorrencia.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/reserva_coordenador.dart';
@@ -25,9 +26,17 @@ const _sala = Sala(id: 's1', nome: 'Lab. 03', predio: _predio, capacidade: 30);
 
 const _outraSala = Sala(id: 's2', nome: 'Sala 101', predio: _predio);
 
-const _aluna = UsuarioResumo(id: 'u1', nome: 'Ana Souza');
+const _aluna = UsuarioResumo(
+  id: 'u1',
+  nome: 'Ana Souza',
+  tipoCredencial: TipoCredencial.matriculaAluno,
+);
 
-const _professor = UsuarioResumo(id: 'u2', nome: 'Paulo Lima');
+const _professor = UsuarioResumo(
+  id: 'u2',
+  nome: 'Paulo Lima',
+  tipoCredencial: TipoCredencial.siapeDocente,
+);
 
 const _coordenador = UsuarioResumo(id: 'c1', nome: 'Carla Dias');
 
@@ -88,6 +97,7 @@ Reserva _reserva({
   DateTime? inicio,
   DateTime? fim,
   Sala sala = _sala,
+  UsuarioResumo solicitante = _aluna,
   UsuarioResumo responsavel = _aluna,
   StatusReserva status = StatusReserva.aprovada,
   String? observacoes,
@@ -96,7 +106,7 @@ Reserva _reserva({
     Reserva(
       id: id,
       sala: sala,
-      solicitante: _aluna,
+      solicitante: solicitante,
       responsavel: responsavel,
       inicio: inicio ?? _inicioUtc.toLocal(),
       fim: fim ?? _fimUtc.toLocal(),
@@ -565,53 +575,82 @@ void main() {
     });
   });
 
-  group('cancelavelPor', () {
+  group('modoDeCancelamentoPara', () {
     final antes = _inicioUtc.toLocal().subtract(const Duration(hours: 1));
+
+    ModoCancelamento? modo(
+      Reserva reserva,
+      PerfilUsuario usuario, {
+      DateTime? agora,
+    }) =>
+        reserva.modoDeCancelamentoPara(usuario, agora: agora ?? antes);
 
     test('o solicitante cancela a própria reserva futura', () {
       expect(
-        _reserva().cancelavelPor(_usuario('u1', Perfil.aluno), agora: antes),
-        isTrue,
+        modo(_reserva(), _usuario('u1', Perfil.aluno)),
+        ModoCancelamento.cancelar,
       );
     });
 
     test('o coordenador cancela reserva de outra pessoa', () {
       expect(
-        _reserva().cancelavelPor(
-          _usuario('c1', Perfil.coordenador),
-          agora: antes,
-        ),
-        isTrue,
+        modo(_reserva(), _usuario('c1', Perfil.coordenador)),
+        ModoCancelamento.cancelar,
       );
     });
 
-    test('terceiro que não coordena não cancela', () {
+    test('o professor cancela a própria reserva', () {
       expect(
-        _reserva().cancelavelPor(
+        modo(
+          _reserva(solicitante: _professor, responsavel: _professor),
           _usuario('u2', Perfil.professor),
-          agora: antes,
         ),
-        isFalse,
+        ModoCancelamento.cancelar,
       );
+    });
+
+    test('o professor solicita o cancelamento de reserva de aluno', () {
+      expect(
+        modo(_reserva(), _usuario('u9', Perfil.professor)),
+        ModoCancelamento.solicitar,
+      );
+    });
+
+    test('o professor não age sobre reserva de outro servidor', () {
+      expect(
+        modo(
+          _reserva(solicitante: _professor, responsavel: _professor),
+          _usuario('u9', Perfil.professor),
+        ),
+        isNull,
+      );
+    });
+
+    test('técnico e aluno não agem sobre reserva de outro aluno', () {
+      expect(modo(_reserva(), _usuario('t1', Perfil.tecnico)), isNull);
+      expect(modo(_reserva(), _usuario('u3', Perfil.aluno)), isNull);
     });
 
     test('reserva terminal não se cancela de novo', () {
       expect(
-        _reserva(status: StatusReserva.cancelada).cancelavelPor(
-          _usuario('u1', Perfil.aluno),
-          agora: antes,
+        modo(
+          _reserva(status: StatusReserva.cancelada),
+          _usuario('u9', Perfil.professor),
         ),
-        isFalse,
+        isNull,
       );
     });
 
-    test('reserva que já começou não se cancela', () {
+    test('reserva que já começou não se cancela nem se solicita', () {
+      final inicio = _inicioUtc.toLocal();
+
       expect(
-        _reserva().cancelavelPor(
-          _usuario('c1', Perfil.coordenador),
-          agora: _inicioUtc.toLocal(),
-        ),
-        isFalse,
+        modo(_reserva(), _usuario('c1', Perfil.coordenador), agora: inicio),
+        isNull,
+      );
+      expect(
+        modo(_reserva(), _usuario('u9', Perfil.professor), agora: inicio),
+        isNull,
       );
     });
   });

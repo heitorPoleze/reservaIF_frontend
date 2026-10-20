@@ -58,7 +58,10 @@ void main() {
       _reserva(10, StatusReserva.rejeitada),
     ]);
 
-    expect(horarios.singleWhere((h) => h.inicio.hour == 8).livre, isFalse);
+    final dasOito = horarios.singleWhere((h) => h.inicio.hour == 8);
+
+    expect(dasOito.livre, isFalse);
+    expect(dasOito.situacao(agora: DateTime(2026, 10, 18)), 'Em Análise');
     expect(horarios.singleWhere((h) => h.inicio.hour == 9).livre, isTrue);
     expect(horarios.singleWhere((h) => h.inicio.hour == 10).livre, isTrue);
   });

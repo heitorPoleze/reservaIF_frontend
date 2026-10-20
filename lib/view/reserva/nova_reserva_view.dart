@@ -118,7 +118,7 @@ class _NovaReservaViewState extends State<NovaReservaView> {
               children: [
                 _ResumoDoHorario(horario: widget.horario, sala: widget.sala),
                 const SizedBox(height: 24),
-                if (_viewModel.exigeResponsavel) ...[
+                if (_viewModel.escolheResponsavel) ...[
                   _CampoResponsavel(viewModel: _viewModel),
                   const SizedBox(height: AppEstilos.espacoEntreCampos),
                 ],
@@ -177,25 +177,35 @@ class _CampoResponsavel extends StatelessWidget {
     }
 
     final carregando = viewModel.isCarregandoServidores;
+    final obrigatorio = viewModel.exigeResponsavel;
 
     return CampoAbrePainel(
       rotulo: 'Responsável',
       valor: viewModel.responsavel,
       rotuloDe: (servidor) => servidor.nome,
       icone: Icons.person_outline,
-      dica: carregando
-          ? 'Carregando servidores...'
-          : 'Escolha o servidor responsável',
-      validador: Validator.selecaoObrigatoria,
+      dica: _dica(carregando: carregando, obrigatorio: obrigatorio),
+      opcional: !obrigatorio,
+      validador: obrigatorio ? Validator.selecaoObrigatoria : null,
       habilitado: !carregando && !viewModel.isLoading,
+      aoLimpar: obrigatorio
+          ? null
+          : () => viewModel.selecionarResponsavel(null),
       abrir: (context) => escolherResponsavel(
         context,
-        perfis: NovaReservaViewModel.perfisDeResponsavel,
+        perfis: viewModel.perfisDeResponsavel,
         servidoresDo: viewModel.servidoresDo,
         selecionado: viewModel.responsavel,
       ),
       aoMudar: viewModel.selecionarResponsavel,
     );
+  }
+
+  String _dica({required bool carregando, required bool obrigatorio}) {
+    if (carregando) return 'Carregando servidores...';
+    return obrigatorio
+        ? 'Escolha o servidor responsável'
+        : 'Você mesmo, se não escolher';
   }
 }
 

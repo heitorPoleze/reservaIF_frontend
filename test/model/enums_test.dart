@@ -97,6 +97,22 @@ void main() {
         [Perfil.aluno],
       );
     });
+
+    test('aluno e coordenador escolhem responsável entre perfis próprios', () {
+      expect(Perfil.aluno.perfisDeResponsavel, [
+        Perfil.coordenador,
+        Perfil.professor,
+        Perfil.tecnico,
+      ]);
+      expect(Perfil.coordenador.perfisDeResponsavel, [
+        Perfil.professor,
+        Perfil.tecnico,
+      ]);
+      expect(
+        Perfil.values.where((perfil) => perfil.escolheResponsavel),
+        unorderedEquals([Perfil.aluno, Perfil.coordenador]),
+      );
+    });
   });
 
   group('TipoRecorrencia e DiaSemana', () {

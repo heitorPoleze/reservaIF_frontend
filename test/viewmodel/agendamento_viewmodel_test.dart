@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:reserva_if/model/predio/predio.dart';
+import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/resultado_cancelamento.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
@@ -195,15 +196,18 @@ void main() {
     expect(viewModel.isCancelando, isFalse);
   });
 
-  test('podeCancelar delega à regra da reserva com o usuário logado', () {
+  test('modoDeCancelamento delega à regra da reserva com o usuário logado', () {
     final viewModel = _viewModel();
 
-    expect(viewModel.podeCancelar(_reservaAmanha(_labA)), isTrue);
     expect(
-      viewModel.podeCancelar(
+      viewModel.modoDeCancelamento(_reservaAmanha(_labA)),
+      ModoCancelamento.cancelar,
+    );
+    expect(
+      viewModel.modoDeCancelamento(
         _reservaAmanha(_labA, status: StatusReserva.cancelada),
       ),
-      isFalse,
+      isNull,
     );
   });
 }

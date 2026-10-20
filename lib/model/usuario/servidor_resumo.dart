@@ -20,5 +20,6 @@ class ServidorResumo {
 
   final Perfil perfil;
 
-  UsuarioResumo get resumo => UsuarioResumo(id: id, nome: nome);
+  UsuarioResumo get resumo =>
+      UsuarioResumo(id: id, nome: nome, tipoCredencial: perfil.tipoCredencial);
 }
