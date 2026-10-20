@@ -2,10 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:reserva_if/utils/datas.dart';
 
 void main() {
-  test('dataParaJson grava meia-noite UTC do dia local', () {
+  test('dataParaJson grava a data civil do dia local', () {
     final dia = DateTime(2026, 10, 19, 23, 30);
 
-    expect(dataParaJson(dia), '2026-10-19T00:00:00.000Z');
+    expect(dataParaJson(dia), '2026-10-19');
+    expect(dataParaJson(DateTime(2026, 1, 5)), '2026-01-05');
+  });
+
+  test('lerDataDoJson lê data civil como dia local', () {
+    expect(lerDataDoJson('2026-10-19'), DateTime(2026, 10, 19));
   });
 
   test('instanteParaJson converte o instante real para UTC', () {
