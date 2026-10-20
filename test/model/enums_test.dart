@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:reserva_if/model/usuario/credencial/tipo_entrada.dart';
-import 'package:reserva_if/model/reserva/frequencia.dart';
+import 'package:reserva_if/model/reserva/dia_semana.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
+import 'package:reserva_if/model/reserva/tipo_recorrencia.dart';
 import 'package:reserva_if/model/usuario/perfil.dart';
 
 void main() {
@@ -63,18 +64,48 @@ void main() {
     });
   });
 
-  group('Frequencia e TipoEntrada', () {
-    test('fazem ida e volta', () {
-      for (final frequencia in Frequencia.values) {
-        expect(Frequencia.fromJson(frequencia.toJson()), frequencia);
+  group('TipoRecorrencia e DiaSemana', () {
+    test('espelham o Prisma e fazem ida e volta', () {
+      for (final tipo in TipoRecorrencia.values) {
+        expect(TipoRecorrencia.fromJson(tipo.toJson()), tipo);
       }
+      for (final dia in DiaSemana.values) {
+        expect(DiaSemana.fromJson(dia.toJson()), dia);
+      }
+      expect(TipoRecorrencia.values, hasLength(5));
+      expect(TipoRecorrencia.semestral.toJson(), 'SEMESTRAL');
+      expect(DiaSemana.terca.toJson(), 'TERCA');
+    });
+
+    test('falham alto em valor desconhecido', () {
+      expect(
+        () => TipoRecorrencia.fromJson('QUINZENAL'),
+        throwsArgumentError,
+      );
+      expect(() => DiaSemana.fromJson('SEGUNDA_FEIRA'), throwsArgumentError);
+    });
+
+    test('só semanal exige dataFim', () {
+      expect(TipoRecorrencia.semanal.exigeDataFim, isTrue);
+      expect(TipoRecorrencia.mensal.exigeDataFim, isFalse);
+      expect(TipoRecorrencia.anual.exigeDataFim, isFalse);
+    });
+
+    test('DiaSemana.de mapeia o weekday do Dart', () {
+      expect(DiaSemana.de(DateTime(2026, 10, 19)), DiaSemana.segunda);
+      expect(DiaSemana.de(DateTime(2026, 10, 18)), DiaSemana.domingo);
+      expect(DiaSemana.de(DateTime(2026, 10, 24)), DiaSemana.sabado);
+    });
+  });
+
+  group('TipoEntrada', () {
+    test('faz ida e volta', () {
       for (final tipo in TipoEntrada.values) {
         expect(TipoEntrada.fromJson(tipo.toJson()), tipo);
       }
     });
 
-    test('falham alto em valor desconhecido', () {
-      expect(() => Frequencia.fromJson('DIARIA'), throwsArgumentError);
+    test('falha alto em valor desconhecido', () {
       expect(() => TipoEntrada.fromJson('CPF'), throwsArgumentError);
       expect(() => TipoEntrada.fromJson('EMAIL'), throwsArgumentError);
     });
