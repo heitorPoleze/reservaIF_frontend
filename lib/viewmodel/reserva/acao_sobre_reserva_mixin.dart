@@ -1,4 +1,4 @@
-import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
+import 'package:reserva_if/model/reserva/acao_sobre_reserva.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/resultado_cancelamento.dart';
 import 'package:reserva_if/model/usuario/perfil_usuario.dart';
@@ -8,7 +8,7 @@ import 'package:reserva_if/viewmodel/estado_de_carga.dart';
 import 'package:reserva_if/viewmodel/notifica_se_vivo_mixin.dart';
 import 'package:reserva_if/viewmodel/reserva/reservas_mudaram.dart';
 
-mixin CancelamentoDeReservaMixin on NotificaSeVivoMixin {
+mixin AcaoSobreReservaMixin on NotificaSeVivoMixin {
   PerfilUsuario get usuario;
 
   ServicesReserva get serviceReserva;
@@ -17,29 +17,29 @@ mixin CancelamentoDeReservaMixin on NotificaSeVivoMixin {
 
   ReservasMudaram get reservasMudaram;
 
-  late final EstadoDeCarga _cargaCancelamento = EstadoDeCarga(
+  late final EstadoDeCarga _cargaDaAcao = EstadoDeCarga(
     aoMudar: notificarSeVivo,
   );
 
-  bool get isCancelando => _cargaCancelamento.isLoading;
+  bool get isExecutandoAcao => _cargaDaAcao.isLoading;
 
-  String? get mensagemErroCancelamento => _cargaCancelamento.mensagemErro;
+  String? get mensagemErroDaAcao => _cargaDaAcao.mensagemErro;
 
-  ModoCancelamento? modoDeCancelamento(Reserva reserva) =>
-      reserva.modoDeCancelamentoPara(usuario);
+  AcaoSobreReserva? acaoDisponivel(Reserva reserva) =>
+      reserva.acaoDisponivelPara(usuario);
 
-  Future<ResultadoCancelamento?> cancelar(
+  Future<ResultadoCancelamento?> executarAcao(
     Reserva reserva,
-    ModoCancelamento modo,
+    AcaoSobreReserva acao,
     String justificativa,
   ) {
-    if (isCancelando) return Future.value();
+    if (isExecutandoAcao) return Future.value();
 
-    return _cargaCancelamento.executar(
+    return _cargaDaAcao.executar(
       chamada: () async {
-        final resultado = await _enviarCancelamento(
+        final resultado = await _enviarAcao(
           reserva.id!,
-          modo,
+          acao,
           justificativa.trim(),
         );
         reservasMudaram.invalidar();
@@ -49,16 +49,16 @@ mixin CancelamentoDeReservaMixin on NotificaSeVivoMixin {
     );
   }
 
-  Future<ResultadoCancelamento> _enviarCancelamento(
+  Future<ResultadoCancelamento> _enviarAcao(
     String idReserva,
-    ModoCancelamento modo,
+    AcaoSobreReserva acao,
     String justificativa,
-  ) => switch (modo) {
-    ModoCancelamento.cancelar => serviceReserva.cancelar(
+  ) => switch (acao) {
+    AcaoSobreReserva.cancelarReserva => serviceReserva.cancelar(
       idReserva,
       justificativa,
     ),
-    ModoCancelamento.solicitar => serviceCancelamento.solicitarHorario(
+    AcaoSobreReserva.solicitarHorario => serviceCancelamento.solicitarHorario(
       idReserva,
       justificativa,
     ),

@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
+import 'package:reserva_if/model/reserva/acao_sobre_reserva.dart';
+import 'package:reserva_if/view/reserva/widgets/botao_acao_sobre_reserva.dart';
 import 'package:reserva_if/utils/validator.dart';
 import 'package:reserva_if/view/theme/app_cores.dart';
 import 'package:reserva_if/view/widgets/campo_texto.dart';
 import 'package:reserva_if/view/widgets/dialogos.dart';
 import 'package:reserva_if/view/widgets/formulario/validacao_formulario.dart';
 
-Future<String?> pedirJustificativaDeCancelamento(
+Future<String?> pedirJustificativaDaAcao(
   BuildContext context,
-  ModoCancelamento modo,
+  AcaoSobreReserva acao,
 ) {
   return showDialog<String>(
     context: context,
     builder: (_) => _DialogoJustificativa(
-      titulo: modo.tituloConfirmacao,
-      mensagem: modo.explicacao,
+      titulo: acao.tituloConfirmacao,
+      mensagem: acao.explicacao,
       rotuloCampo: 'Justificativa',
-      dica: modo.dicaJustificativa,
-      rotuloConfirmar: modo.rotuloAcao,
-      corConfirmar: AppCores.aviso,
+      dica: acao.dicaJustificativa,
+      rotuloConfirmar: acao.rotuloAcao,
+      corConfirmar: corDaAcaoSobreReserva(acao),
     ),
   );
 }

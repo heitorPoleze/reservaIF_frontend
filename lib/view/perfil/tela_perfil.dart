@@ -8,7 +8,7 @@ import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/abas_por_status.dart';
 import 'package:reserva_if/view/reserva/widgets/acoes_de_analise.dart';
 import 'package:reserva_if/view/reserva/widgets/analisar_reserva.dart';
-import 'package:reserva_if/view/reserva/widgets/cancelar_reserva.dart';
+import 'package:reserva_if/view/reserva/widgets/acao_sobre_reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/selo_status_reserva.dart';
 import 'package:reserva_if/view/theme/app_cores.dart';
 import 'package:reserva_if/view/theme/app_estilos.dart';

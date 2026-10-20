@@ -19,6 +19,17 @@ class ServicesReserva extends BaseService {
     );
   }
 
+  Future<Reserva> buscarPorId(String idReserva) {
+    return executarRequisicao(
+      requisicao: RequisicaoHttp.get(rota(idReserva)),
+      aoSucesso: (resposta) =>
+          extrairObjeto(resposta.bodyBytes, Reserva.fromJson),
+      errosPorStatus: {404: 'Reserva não encontrada.'},
+      erroMsg: 'Erro ao buscar a reserva.',
+      acao: 'buscar a reserva',
+    );
+  }
+
   Future<List<Reserva>> buscarSolicitadas() {
     return executarRequisicao(
       requisicao: RequisicaoHttp.get(rota('minhas')),

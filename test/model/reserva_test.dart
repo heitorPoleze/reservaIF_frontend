@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:reserva_if/model/predio/predio.dart';
 import 'package:reserva_if/model/reserva/dia_semana.dart';
-import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
+import 'package:reserva_if/model/reserva/acao_sobre_reserva.dart';
 import 'package:reserva_if/model/reserva/regra_recorrencia.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/reserva_coordenador.dart';
@@ -102,19 +102,18 @@ Reserva _reserva({
   StatusReserva status = StatusReserva.aprovada,
   String? observacoes,
   DateTime? aceitoPeloResponsavelEm,
-}) =>
-    Reserva(
-      id: id,
-      sala: sala,
-      solicitante: solicitante,
-      responsavel: responsavel,
-      inicio: inicio ?? _inicioUtc.toLocal(),
-      fim: fim ?? _fimUtc.toLocal(),
-      finalidade: 'Aula de Flutter',
-      observacoes: observacoes,
-      status: status,
-      aceitoPeloResponsavelEm: aceitoPeloResponsavelEm,
-    );
+}) => Reserva(
+  id: id,
+  sala: sala,
+  solicitante: solicitante,
+  responsavel: responsavel,
+  inicio: inicio ?? _inicioUtc.toLocal(),
+  fim: fim ?? _fimUtc.toLocal(),
+  finalidade: 'Aula de Flutter',
+  observacoes: observacoes,
+  status: status,
+  aceitoPeloResponsavelEm: aceitoPeloResponsavelEm,
+);
 
 PerfilUsuario _usuario(String uuid, Perfil perfil) => PerfilUsuario(
   uuid: uuid,
@@ -598,27 +597,26 @@ void main() {
     });
   });
 
-  group('modoDeCancelamentoPara', () {
+  group('acaoDisponivelPara', () {
     final antes = _inicioUtc.toLocal().subtract(const Duration(hours: 1));
 
-    ModoCancelamento? modo(
+    AcaoSobreReserva? modo(
       Reserva reserva,
       PerfilUsuario usuario, {
       DateTime? agora,
-    }) =>
-        reserva.modoDeCancelamentoPara(usuario, agora: agora ?? antes);
+    }) => reserva.acaoDisponivelPara(usuario, agora: agora ?? antes);
 
     test('o solicitante cancela a própria reserva futura', () {
       expect(
         modo(_reserva(), _usuario('u1', Perfil.aluno)),
-        ModoCancelamento.cancelar,
+        AcaoSobreReserva.cancelarReserva,
       );
     });
 
     test('o coordenador cancela reserva de outra pessoa', () {
       expect(
         modo(_reserva(), _usuario('c1', Perfil.coordenador)),
-        ModoCancelamento.cancelar,
+        AcaoSobreReserva.cancelarReserva,
       );
     });
 
@@ -628,14 +626,14 @@ void main() {
           _reserva(solicitante: _professor, responsavel: _professor),
           _usuario('u2', Perfil.professor),
         ),
-        ModoCancelamento.cancelar,
+        AcaoSobreReserva.cancelarReserva,
       );
     });
 
-    test('o professor solicita o cancelamento de reserva de aluno', () {
+    test('o professor solicita o horário de reserva de aluno', () {
       expect(
         modo(_reserva(), _usuario('u9', Perfil.professor)),
-        ModoCancelamento.solicitar,
+        AcaoSobreReserva.solicitarHorario,
       );
     });
 

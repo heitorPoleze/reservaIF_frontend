@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:reserva_if/model/predio/predio.dart';
-import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
+import 'package:reserva_if/model/reserva/acao_sobre_reserva.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/resultado_cancelamento.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
@@ -145,9 +145,9 @@ void main() {
     addTearDown(viewModel.dispose);
     await viewModel.carregar();
 
-    final resultado = await viewModel.cancelar(
+    final resultado = await viewModel.executarAcao(
       viewModel.solicitadas.single,
-      ModoCancelamento.cancelar,
+      AcaoSobreReserva.cancelarReserva,
       '  Imprevisto  ',
     );
 
@@ -155,7 +155,7 @@ void main() {
     expect(service.cancelamentos, ['solicitada|Imprevisto']);
     expect(canal.geracao, 1);
     expect(service.chamadasSolicitadas, 1);
-    expect(viewModel.isCancelando, isFalse);
+    expect(viewModel.isExecutandoAcao, isFalse);
   });
 
   test('sincronizarCom recarrega as listas só quando a geração muda', () async {
@@ -179,7 +179,7 @@ void main() {
     expect(service.chamadasResponsabilidade, 2);
   });
 
-  test('modoDeCancelamento delega à regra da reserva com o usuário logado', () {
+  test('acaoDisponivel delega à regra da reserva com o usuário logado', () {
     final viewModel = ReservasPerfilViewModel(
       usuario: _usuario(Perfil.aluno),
       service: _ServicesReservaFalso(),
@@ -189,11 +189,11 @@ void main() {
     addTearDown(viewModel.dispose);
 
     expect(
-      viewModel.modoDeCancelamento(_reserva('futura')),
-      ModoCancelamento.cancelar,
+      viewModel.acaoDisponivel(_reserva('futura')),
+      AcaoSobreReserva.cancelarReserva,
     );
     expect(
-      viewModel.modoDeCancelamento(
+      viewModel.acaoDisponivel(
         _reserva('cancelada', status: StatusReserva.cancelada),
       ),
       isNull,

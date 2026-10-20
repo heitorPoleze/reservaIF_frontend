@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:reserva_if/model/predio/predio.dart';
-import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
+import 'package:reserva_if/model/reserva/acao_sobre_reserva.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
 import 'package:reserva_if/model/reserva/resultado_cancelamento.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
@@ -211,9 +211,9 @@ void main() {
     await viewModel.carregarReservas();
     final buscasAntes = service.buscas;
 
-    final resultado = await viewModel.cancelar(
+    final resultado = await viewModel.executarAcao(
       viewModel.reservas.single,
-      ModoCancelamento.cancelar,
+      AcaoSobreReserva.cancelarReserva,
       '  Imprevisto  ',
     );
 
@@ -221,7 +221,7 @@ void main() {
     expect(service.cancelamentos, ['r-sA|Imprevisto']);
     expect(canal.geracao, 1);
     expect(service.buscas, buscasAntes);
-    expect(viewModel.isCancelando, isFalse);
+    expect(viewModel.isExecutandoAcao, isFalse);
   });
 
   test('sincronizarCom recarrega a sala só quando a geração muda', () async {
@@ -240,41 +240,44 @@ void main() {
     expect(service.buscas, buscasAntes + 1);
   });
 
-  test('solicitar envia ao módulo de cancelamentos e invalida o canal', () async {
-    final serviceReserva = ServicesReservaFalso();
-    final serviceCancelamento = ServicesCancelamentoFalso();
-    final canal = ReservasMudaram();
-    final viewModel = _viewModel(
-      serviceReserva: serviceReserva,
-      serviceCancelamento: serviceCancelamento,
-      reservasMudaram: canal,
-    );
-    viewModel.selecionarSala(_labA);
-    await viewModel.carregarReservas();
-    final buscasAntes = serviceReserva.buscas;
+  test(
+    'solicitar horário envia ao módulo de cancelamentos e invalida o canal',
+    () async {
+      final serviceReserva = ServicesReservaFalso();
+      final serviceCancelamento = ServicesCancelamentoFalso();
+      final canal = ReservasMudaram();
+      final viewModel = _viewModel(
+        serviceReserva: serviceReserva,
+        serviceCancelamento: serviceCancelamento,
+        reservasMudaram: canal,
+      );
+      viewModel.selecionarSala(_labA);
+      await viewModel.carregarReservas();
+      final buscasAntes = serviceReserva.buscas;
 
-    final resultado = await viewModel.cancelar(
-      viewModel.reservas.single,
-      ModoCancelamento.solicitar,
-      '  Prova prática  ',
-    );
+      final resultado = await viewModel.executarAcao(
+        viewModel.reservas.single,
+        AcaoSobreReserva.solicitarHorario,
+        '  Prova prática  ',
+      );
 
-    expect(resultado!.solicitacaoEnviada, isTrue);
-    expect(serviceCancelamento.solicitacoes, ['r-sA|Prova prática']);
-    expect(serviceReserva.cancelamentos, isEmpty);
-    expect(canal.geracao, 1);
-    expect(serviceReserva.buscas, buscasAntes);
-  });
+      expect(resultado!.solicitacaoEnviada, isTrue);
+      expect(serviceCancelamento.solicitacoes, ['r-sA|Prova prática']);
+      expect(serviceReserva.cancelamentos, isEmpty);
+      expect(canal.geracao, 1);
+      expect(serviceReserva.buscas, buscasAntes);
+    },
+  );
 
-  test('modoDeCancelamento delega à regra da reserva com o usuário logado', () {
+  test('acaoDisponivel delega à regra da reserva com o usuário logado', () {
     final viewModel = _viewModel();
 
     expect(
-      viewModel.modoDeCancelamento(_reservaAmanha(_labA)),
-      ModoCancelamento.cancelar,
+      viewModel.acaoDisponivel(_reservaAmanha(_labA)),
+      AcaoSobreReserva.cancelarReserva,
     );
     expect(
-      viewModel.modoDeCancelamento(
+      viewModel.acaoDisponivel(
         _reservaAmanha(_labA, status: StatusReserva.cancelada),
       ),
       isNull,

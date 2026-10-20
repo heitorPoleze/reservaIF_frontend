@@ -3,3 +3,7 @@ para as pendências do coordenador, também devem aparecer os cards presentes em
 (POST
 /cancelamentos/solicitacoes/{id}/aprovar e POST
 /cancelamentos/solicitacoes/{id}/rejeitar)
+
+agenda (calendario) some da tela enquanto a sala não for selecionada
+
+trocar "cancelar reserva" para "Solicitar Horário" quando é professor

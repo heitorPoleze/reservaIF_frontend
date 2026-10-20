@@ -7,7 +7,7 @@ import 'package:reserva_if/services/services_cancelamento.dart';
 import 'package:reserva_if/services/services_predio.dart';
 import 'package:reserva_if/services/services_reserva.dart';
 import 'package:reserva_if/view/reserva/nova_reserva_view.dart';
-import 'package:reserva_if/view/reserva/widgets/cancelar_reserva.dart';
+import 'package:reserva_if/view/reserva/widgets/acao_sobre_reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/lista_horarios_do_dia.dart';
 import 'package:reserva_if/view/reserva/widgets/painel_horario_livre.dart';
 import 'package:reserva_if/view/theme/app_cores.dart';
@@ -140,13 +140,6 @@ class _ConteudoDoAgendamento extends StatelessWidget {
         32,
       ),
       children: [
-        CalendarioMensal(
-          diasMarcados: viewModel.diasComReserva,
-          diaSelecionado: viewModel.diaSelecionado,
-          carregando: viewModel.isCarregandoReservas,
-          aoSelecionarDia: viewModel.selecionarDia,
-        ),
-        const SizedBox(height: 24),
         CampoSelecao<Sala>(
           rotulo: 'Selecionar sala',
           valor: viewModel.salaSelecionada,
@@ -156,10 +149,28 @@ class _ConteudoDoAgendamento extends StatelessWidget {
           dica: 'Escolha uma sala',
           aoMudar: viewModel.selecionarSala,
         ),
-        const SizedBox(height: 28),
-        _CabecalhoDosHorarios(viewModel: viewModel),
-        const SizedBox(height: 12),
-        _SecaoDeHorarios(viewModel: viewModel, aoTocarHorario: aoTocarHorario),
+        const SizedBox(height: 24),
+        if (viewModel.salaSelecionada == null)
+          const CartaoVazio(
+            icone: Icons.meeting_room_outlined,
+            mensagem:
+                'Escolha uma sala para ver a agenda e os horários do dia.',
+          )
+        else ...[
+          CalendarioMensal(
+            diasMarcados: viewModel.diasComReserva,
+            diaSelecionado: viewModel.diaSelecionado,
+            carregando: viewModel.isCarregandoReservas,
+            aoSelecionarDia: viewModel.selecionarDia,
+          ),
+          const SizedBox(height: 28),
+          _CabecalhoDosHorarios(viewModel: viewModel),
+          const SizedBox(height: 12),
+          _SecaoDeHorarios(
+            viewModel: viewModel,
+            aoTocarHorario: aoTocarHorario,
+          ),
+        ],
       ],
     );
   }
@@ -173,9 +184,7 @@ class _CabecalhoDosHorarios extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
-    final mostrarLivres =
-        viewModel.salaSelecionada != null &&
-        viewModel.mensagemErroReservas == null;
+    final mostrarLivres = viewModel.mensagemErroReservas == null;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -195,7 +204,7 @@ class _CabecalhoDosHorarios extends StatelessWidget {
             ],
           ),
         ),
-        if (viewModel.isCancelando) ...[
+        if (viewModel.isExecutandoAcao) ...[
           const SizedBox.square(
             dimension: 16,
             child: CircularProgressIndicator(strokeWidth: 2),
@@ -243,13 +252,6 @@ class _SecaoDeHorarios extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (viewModel.salaSelecionada == null) {
-      return const CartaoVazio(
-        icone: Icons.meeting_room_outlined,
-        mensagem: 'Escolha uma sala para ver os horários do dia.',
-      );
-    }
-
     final erro = viewModel.mensagemErroReservas;
 
     if (erro != null) {

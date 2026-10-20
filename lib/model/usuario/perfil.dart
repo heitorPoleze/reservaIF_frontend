@@ -37,11 +37,17 @@ enum Perfil {
 
   bool get acompanhaPendencias => this != Perfil.aluno;
 
+  bool get resolveConflitosDeHorario => this == Perfil.coordenador;
+
   bool get exigeResponsavel => this == Perfil.aluno;
 
   bool get criaRecorrencia => this == Perfil.coordenador;
   List<Perfil> get perfisDeResponsavel => switch (this) {
-    Perfil.aluno => const [Perfil.coordenador, Perfil.professor, Perfil.tecnico],
+    Perfil.aluno => const [
+      Perfil.coordenador,
+      Perfil.professor,
+      Perfil.tecnico,
+    ],
     Perfil.coordenador => const [Perfil.professor, Perfil.tecnico],
     Perfil.professor || Perfil.tecnico => const [],
   };

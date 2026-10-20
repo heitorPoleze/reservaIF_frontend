@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:reserva_if/model/reserva/modo_cancelamento.dart';
+import 'package:reserva_if/model/reserva/acao_sobre_reserva.dart';
 import 'package:reserva_if/model/reserva/reserva.dart';
-import 'package:reserva_if/view/reserva/widgets/botao_cancelar_reserva.dart';
+import 'package:reserva_if/view/reserva/widgets/botao_acao_sobre_reserva.dart';
 import 'package:reserva_if/view/reserva/widgets/selo_status_reserva.dart';
 import 'package:reserva_if/view/widgets/cartao_entidade.dart';
 
 class PainelDetalhesReserva extends StatelessWidget {
   final Reserva reserva;
-  final ModoCancelamento? modoCancelamento;
-  final ValueChanged<ModoCancelamento> aoCancelar;
+  final AcaoSobreReserva? acao;
+  final ValueChanged<AcaoSobreReserva> aoExecutarAcao;
 
   const PainelDetalhesReserva({
     super.key,
     required this.reserva,
-    required this.modoCancelamento,
-    required this.aoCancelar,
+    required this.acao,
+    required this.aoExecutarAcao,
   });
 
   @override
   Widget build(BuildContext context) {
-    final modo = modoCancelamento;
+    final acao = this.acao;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -33,15 +33,15 @@ class PainelDetalhesReserva extends StatelessWidget {
             acao: SeloStatusReserva(status: reserva.status),
             corpo: _linhas(),
           ),
-          if (modo != null) ...[
+          if (acao != null) ...[
             const SizedBox(height: 20),
             Align(
               alignment: AlignmentDirectional.centerEnd,
-              child: BotaoCancelarReserva(
-                modo: modo,
+              child: BotaoAcaoSobreReserva(
+                acao: acao,
                 aoPressionar: () {
                   Navigator.pop(context);
-                  aoCancelar(modo);
+                  aoExecutarAcao(acao);
                 },
               ),
             ),

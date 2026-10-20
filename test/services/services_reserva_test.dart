@@ -365,4 +365,35 @@ void main() {
       );
     });
   });
+
+  group('buscarPorId', () {
+    test('busca a reserva pelo id e converte os objetos associados', () async {
+      http.Request? enviada;
+
+      final reserva = await comRespostaFixa(
+        () => service.buscarPorId('64b7f0c2a1b2c3d4e5f60718'),
+        respostaJson(_reservaJson, 200),
+        capturar: (requisicao) => enviada = requisicao,
+      );
+
+      expect(enviada!.method, 'GET');
+      expect(enviada!.url.path, endsWith('/reservas/64b7f0c2a1b2c3d4e5f60718'));
+      expect(reserva.sala.capacidade, 30);
+      expect(reserva.solicitante.nome, 'Ana Clara Souza');
+    });
+
+    test('404 vira reserva não encontrada', () async {
+      final erro = await erroDe(
+        () => comRespostaFixa(
+          () => service.buscarPorId('x'),
+          respostaJson({
+            'erro': 'NAO_ENCONTRADO',
+            'mensagem': 'Reserva não encontrada.',
+          }, 404),
+        ),
+      );
+
+      expect(erro.mensagem, 'Reserva não encontrada.');
+    });
+  });
 }

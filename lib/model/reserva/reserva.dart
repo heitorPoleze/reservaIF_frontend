@@ -4,7 +4,7 @@ import '../sala/sala.dart';
 import '../usuario/perfil_usuario.dart';
 import '../usuario/usuario_resumo.dart';
 import 'cancelamento.dart';
-import 'modo_cancelamento.dart';
+import 'acao_sobre_reserva.dart';
 import 'serie_recorrencia.dart';
 import 'status_reserva.dart';
 import 'tipo_recorrencia.dart';
@@ -146,7 +146,7 @@ class Reserva {
     return status.ocupaSala && !agora.isBefore(inicio) && agora.isBefore(fim);
   }
 
-  ModoCancelamento? modoDeCancelamentoPara(
+  AcaoSobreReserva? acaoDisponivelPara(
     PerfilUsuario usuario, {
     DateTime? agora,
   }) {
@@ -154,10 +154,10 @@ class Reserva {
       return null;
     }
     if (usuario.podeAprovar || solicitante.id == usuario.uuid) {
-      return ModoCancelamento.cancelar;
+      return AcaoSobreReserva.cancelarReserva;
     }
     if (usuario.solicitaCancelamentoDeAluno && solicitante.ehAluno) {
-      return ModoCancelamento.solicitar;
+      return AcaoSobreReserva.solicitarHorario;
     }
     return null;
   }

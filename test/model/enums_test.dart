@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:reserva_if/model/usuario/credencial/tipo_entrada.dart';
 import 'package:reserva_if/model/reserva/dia_semana.dart';
 import 'package:reserva_if/model/reserva/status_reserva.dart';
+import 'package:reserva_if/model/reserva/status_solicitacao_cancelamento.dart';
 import 'package:reserva_if/model/reserva/tipo_recorrencia.dart';
 import 'package:reserva_if/model/usuario/perfil.dart';
 
@@ -188,6 +189,24 @@ void main() {
       expect(TipoEntrada.inferir('1234567'), TipoEntrada.siape);
       expect(TipoEntrada.inferir('20241tsi0063'), TipoEntrada.matricula);
       expect(TipoEntrada.inferir('a@ifes.edu.br'), isNull);
+    });
+  });
+
+  group('StatusSolicitacaoCancelamento', () {
+    test('espelha o backend e faz ida e volta', () {
+      for (final status in StatusSolicitacaoCancelamento.values) {
+        expect(StatusSolicitacaoCancelamento.fromJson(status.toJson()), status);
+      }
+      expect(StatusSolicitacaoCancelamento.pendente.toJson(), 'PENDENTE');
+      expect(StatusSolicitacaoCancelamento.aprovada.toJson(), 'APROVADA');
+      expect(StatusSolicitacaoCancelamento.rejeitada.toJson(), 'REJEITADA');
+    });
+
+    test('falha alto em valor desconhecido', () {
+      expect(
+        () => StatusSolicitacaoCancelamento.fromJson('PENDENTE_APROVACAO'),
+        throwsArgumentError,
+      );
     });
   });
 }

@@ -1,23 +1,25 @@
-enum ModoCancelamento {
-  cancelar(
-    rotuloAcao: 'Cancelar reserva',
+enum AcaoSobreReserva {
+  cancelarReserva(
+    rotuloAcao: 'Cancelar Reserva',
     tituloConfirmacao: 'Cancelar reserva?',
-    explicacao: 'O horário volta a ficar livre e a reserva segue no '
+    explicacao:
+        'O horário volta a ficar livre e a reserva segue no '
         'histórico como cancelada.',
     dicaJustificativa: 'Por que a reserva está sendo cancelada?',
     falhaPadrao: 'Não foi possível cancelar a reserva.',
   ),
-  solicitar(
+  solicitarHorario(
     rotuloAcao: 'Solicitar Horário',
     tituloConfirmacao: 'Solicitar horário?',
-    explicacao: 'A coordenação vai avaliar o pedido. A reserva do aluno '
-        'continua ativa até a decisão; se aprovada, ela é cancelada e o '
-        'horário passa a ser reservado em seu nome.',
+    explicacao:
+        'A coordenação vai avaliar o pedido. Até a decisão, o '
+        'horário continua com o aluno; se aprovado, ele passa a ser '
+        'reservado em seu nome.',
     dicaJustificativa: 'Por que você precisa deste horário?',
     falhaPadrao: 'Não foi possível solicitar o horário.',
   );
 
-  const ModoCancelamento({
+  const AcaoSobreReserva({
     required this.rotuloAcao,
     required this.tituloConfirmacao,
     required this.explicacao,

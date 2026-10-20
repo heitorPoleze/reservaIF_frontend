@@ -48,6 +48,8 @@ class PerfilUsuario {
 
   bool get solicitaCancelamentoDeAluno => perfil.solicitaCancelamentoDeAluno;
 
+  bool get resolveConflitosDeHorario => perfil.resolveConflitosDeHorario;
+
   UsuarioResumo get resumo =>
       UsuarioResumo(id: uuid, nome: nome, tipoCredencial: tipoCredencial);
 
